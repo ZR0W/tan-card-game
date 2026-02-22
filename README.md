@@ -90,6 +90,8 @@ card-game-ai/
 │   │   └── index.ts
 │   ├── workers/
 │   │   ├── simulationWorker.ts
+│   ├── cli/
+│   │   └── play.ts
 │   ├── ui/
 │   │   ├── components/
 │   │   ├── hooks/
@@ -212,6 +214,24 @@ card-game-ai/
 - Add simulation stress test (1,000+ runs)
 
 **Deliverable:** Headless simulation engine.
+
+#### Story 1.5 — CLI Runner
+
+**Objective:** Run a full game from the command line (human vs human, or optionally human vs random bot after 1.4) for debugging and testing without the browser.
+
+**Tasks:**
+
+- Add a single CLI entry point (e.g. `src/cli/play.ts` or `scripts/play-cli.ts`) that:
+  - Takes an optional seed (e.g. `npm run play -- 42`).
+  - Creates initial state with that seed.
+  - Loops: print current state (trump, hands, round, whose turn, phase), print legal moves (e.g. indices or short codes), read one line from stdin, parse it into a move, call the rules engine to apply the move and get the next state, exit on game over with winner.
+- Add an npm script (e.g. `"play": "tsx src/cli/play.ts"` or run built `dist/cli/play.js`) so you can run `npm run play`.
+- Keep the CLI minimal: plain text, line-by-line; no TUI or curses.
+- Optional: "human vs random bot" mode (pick a random legal move for player 1) once 1.4 exists, so you can test alone.
+
+**Deliverable:** You can play a full game (or watch a random game) from the terminal without opening the browser.
+
+**Dependencies:** Story 1.3 must be done. Story 1.4 is optional (only needed for human vs random bot in CLI).
 
 ---
 
