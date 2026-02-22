@@ -3,3 +3,11 @@ export type { Card, Rank, Suit } from "./card";
 export { createRng } from "./rng";
 export type { Rng } from "./rng";
 export { createDeck, draw, shuffle } from "./deck";
+export { createInitialGameState } from "./gameState";
+export type {
+  CurrentRound,
+  GameState,
+  Phase,
+  PlayerId,
+  PlayerState,
+} from "./gameState";

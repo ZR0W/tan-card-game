@@ -10,13 +10,16 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 - [x] **Story 1.1** — Card & Deck System  
   Completed: 2025-02-19 | Notes: TypeScript engine (card, deck, seedable RNG); Fisher–Yates shuffle; immutable draw; Vitest tests (length, uniqueness, reproducibility).
 
-- [ ] **Story 1.2** — Game State Modeling  
-  Completed: _ | Notes: _
+- [x] **Story 1.2** — Game State Modeling  
+  Completed: 2025-02-19 | Notes: PlayerState, GameState, Phase, createInitialGameState; JSON-safe; tests for shape, determinism, round-trip.
 
 - [ ] **Story 1.3** — Rules Engine  
   Completed: _ | Notes: _
 
 - [ ] **Story 1.4** — Simulation Engine  
+  Completed: _ | Notes: _
+
+- [ ] **Story 1.5** — CLI Runner  
   Completed: _ | Notes: _
 
 ---
