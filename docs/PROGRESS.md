@@ -7,8 +7,8 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 
 ## EPIC 1 — Core Game Engine
 
-- [ ] **Story 1.1** — Card & Deck System  
-  Completed: _ | Notes: _
+- [x] **Story 1.1** — Card & Deck System  
+  Completed: 2025-02-19 | Notes: TypeScript engine (card, deck, seedable RNG); Fisher–Yates shuffle; immutable draw; Vitest tests (length, uniqueness, reproducibility).
 
 - [ ] **Story 1.2** — Game State Modeling  
   Completed: _ | Notes: _

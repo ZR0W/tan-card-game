@@ -4,8 +4,24 @@ A simple web game of the Vietnamese card game **tan** to play against a bot.
 
 ---
 
+## Getting started
+
+After cloning the repo, use these commands to install dependencies, run tests, and build:
+
+| Command | What it does |
+|--------|-------------------------------|
+| `npm install` | Installs dependencies (TypeScript, Vitest). Run once after clone. |
+| `npm test` | Runs the test suite once. Verifies engine behaviour (deck, shuffle, draw). |
+| `npm run test:watch` | Runs tests in watch mode; re-runs when you change files. Stop with Ctrl+C. |
+| `npm run build` | Compiles TypeScript from `src/` to `dist/`. |
+
+**Quick check:** From the project root, run `npm install` then `npm test`. You should see all tests pass and the deck/system tests in the output.
+
+---
+
 ## Table of Contents
 
+- [Getting started](#getting-started)
 - [1. Project Overview](#1-project-overview)
 - [2. Repository Structure](#2-repository-structure)
 - [3. Architectural Principles](#3-architectural-principles)

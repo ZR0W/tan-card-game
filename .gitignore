@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+
+# Editor and OS
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# Temporary commit message file (use with git commit -F)
+.commitmsg.txt
+
+# Optional: keep if you use npm cache or lockfile choices
+# package-lock.json
+# (uncomment above only if you intentionally don’t want to commit the lockfile)
