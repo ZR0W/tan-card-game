@@ -24,3 +24,4 @@ export {
 } from "./rules";
 export { IllegalMoveError } from "./rules";
 export type { Move } from "./rules";
+export { cloneGameState, runFromState, simulateRandomGame } from "./simulator";
