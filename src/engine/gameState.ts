@@ -33,6 +33,8 @@ export interface GameState {
   currentRound: CurrentRound;
   discardPile: Card[];
   phase: Phase;
+  /** Set when phase is game_over (first to 0 cards after draw). */
+  winner?: PlayerId;
 }
 
 /**

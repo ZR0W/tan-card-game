@@ -13,8 +13,8 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 - [x] **Story 1.2** — Game State Modeling  
   Completed: 2025-02-19 | Notes: PlayerState, GameState, Phase, createInitialGameState; JSON-safe; tests for shape, determinism, round-trip.
 
-- [ ] **Story 1.3** — Rules Engine  
-  Completed: _ | Notes: _
+- [x] **Story 1.3** — Rules Engine  
+  Completed: 2025-02-19 | Notes: Move types, getLegalMoves, applyMove (attack/defend/give_up/pass_attack/draw), cardBeats, getWinner; GameState.winner; IllegalMoveError; tests.
 
 - [ ] **Story 1.4** — Simulation Engine  
   Completed: _ | Notes: _
