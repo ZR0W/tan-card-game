@@ -26,10 +26,13 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 
 ## EPIC 2 — Minimal UI
 
-- [ ] **Story 2.1** — Game Board & Hand Display  
-  Completed: _ | Notes: _
+- [x] **Story 2.1** — Game Board & Hand Display  
+  Completed: 2025-03-22 | Notes: Vite + React; GameBoard, hands, turn indicator; seed field; `@engine` alias; RTL smoke test.
 
 - [ ] **Story 2.2** — Move Input & Turn Flow  
+  Completed: _ | Notes: _
+
+- [ ] **Story 2.3** — Extended UI & Visual Card Design  
   Completed: _ | Notes: _
 
 ---

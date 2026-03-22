@@ -10,12 +10,16 @@ After cloning the repo, use these commands to install dependencies, run tests, a
 
 | Command | What it does |
 |--------|-------------------------------|
-| `npm install` | Installs dependencies (TypeScript, Vitest). Run once after clone. |
-| `npm test` | Runs the test suite once. Verifies engine behaviour (deck, shuffle, draw). |
+| `npm install` | Installs dependencies (TypeScript, Vitest, Vite, React). Run once after clone. |
+| `npm run dev` | Starts the Vite dev server for the browser UI (open the URL it prints). |
+| `npm test` | Runs the test suite once (engine, CLI, UI smoke tests). |
 | `npm run test:watch` | Runs tests in watch mode; re-runs when you change files. Stop with Ctrl+C. |
-| `npm run build` | Compiles TypeScript from `src/` to `dist/`. |
+| `npm run typecheck` | TypeScript check across `src/` and `tests/` (no emit). |
+| `npm run build` | Production build with Vite → output in `dist/` (for GitHub Pages, etc.). |
+| `npm run preview` | Serves the last `dist/` build locally to verify production output. |
+| `npm run play` | CLI game (Epic 1). |
 
-**Quick check:** From the project root, run `npm install` then `npm test`. You should see all tests pass and the deck/system tests in the output.
+**Quick check:** From the project root, run `npm install` then `npm test`. You should see all tests pass. Use `npm run dev` to see the minimal UI (Epic 2).
 
 ---
 
@@ -69,47 +73,28 @@ This ensures the AI can run simulations independently of the interface.
 **Proposed repository structure:**
 
 ```
-card-game-ai/
-├── public/
+tan-card-game/
+├── index.html
 ├── src/
-│   ├── engine/
-│   │   ├── types.ts
-│   │   ├── card.ts
-│   │   ├── deck.ts
-│   │   ├── gameState.ts
-│   │   ├── rules.ts
-│   │   ├── simulator.ts
-│   │   ├── rng.ts
-│   │   └── index.ts
-│   ├── ai/
-│   │   ├── evaluation.ts
-│   │   ├── heuristicBot.ts
-│   │   ├── monteCarloBot.ts
-│   │   ├── determinization.ts
-│   │   ├── mcts.ts (optional future)
-│   │   └── index.ts
-│   ├── workers/
-│   │   ├── simulationWorker.ts
-│   ├── cli/
-│   │   ├── args.ts
-│   │   ├── format.ts
-│   │   └── play.ts
+│   ├── engine/          (rules, state, deck — no UI)
+│   ├── cli/               (terminal runner)
 │   ├── ui/
 │   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── GameBoard.tsx
-│   │   └── App.tsx
-│   ├── state/
-│   │   ├── gameStore.ts
-│   ├── utils/
+│   │   │   ├── GameBoard.tsx
+│   │   │   ├── OpponentHand.tsx
+│   │   │   ├── PlayerHand.tsx
+│   │   │   └── TurnIndicator.tsx
+│   │   ├── App.tsx
+│   │   ├── app.css
+│   │   └── cardFormat.ts
 │   ├── main.tsx
 │   └── vite-env.d.ts
+│   (future: ai/, workers/, state/, utils/)
 ├── tests/
 │   ├── engine/
 │   ├── cli/
-│   ├── ai/
+│   └── ui/
 ├── docs/
-│   └── PROJECT_PLAN.md
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
@@ -279,6 +264,22 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 - Handle turn switching (human vs human)
 
 **Deliverable:** Two humans can play one full game in the browser.
+
+#### Story 2.3 — Extended UI & Visual Card Design
+
+**Objective:** Move beyond text-only labels so cards and the table feel like a real game: clear suits/ranks, readable layout, and intentional visual design.
+
+**Tasks:**
+
+- Replace plain string card labels with **visual card components** (e.g. rank typography, suit symbols or icons, red/black coloring for Hearts/Diamonds vs Clubs/Spades).
+- **Opponent / face-down** cards: consistent card-back styling (not only “?” text).
+- Improve **layout and spacing**: hand as a row or fan, distinct play area, responsive behavior on small screens.
+- **Visual hierarchy** and polish: typography, borders, backgrounds; optional light motion (e.g. hover/focus) without blocking gameplay.
+- **Accessibility:** sufficient contrast, keyboard focus where interactive, `aria` labels preserved or improved.
+
+**Deliverable:** Board and hands communicate card identity at a glance; UI no longer relies on raw text strings alone for card content.
+
+**Dependencies / order:** Builds on Story 2.1. Can follow Story 2.2 (playable flow first) or overlap—visual polish is independent of move wiring.
 
 ---
 
