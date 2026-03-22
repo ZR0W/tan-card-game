@@ -91,6 +91,8 @@ card-game-ai/
 │   ├── workers/
 │   │   ├── simulationWorker.ts
 │   ├── cli/
+│   │   ├── args.ts
+│   │   ├── format.ts
 │   │   └── play.ts
 │   ├── ui/
 │   │   ├── components/
@@ -104,6 +106,7 @@ card-game-ai/
 │   └── vite-env.d.ts
 ├── tests/
 │   ├── engine/
+│   ├── cli/
 │   ├── ai/
 ├── docs/
 │   └── PROJECT_PLAN.md
@@ -232,6 +235,18 @@ card-game-ai/
 **Deliverable:** You can play a full game (or watch a random game) from the terminal without opening the browser.
 
 **Dependencies:** Story 1.3 must be done. Story 1.4 is optional (only needed for human vs random bot in CLI).
+
+**CLI usage** (after implementation):
+
+| Command | Description |
+|--------|-------------|
+| `npm run play` | Hot-seat two humans; default seed `12345` (reproducible deal). |
+| `npm run play -- 42` | Same with seed `42`. |
+| `npm run play -- --bot` | You are player 0; player 1 plays random legal moves. |
+| `npm run play -- --auto` | Print a full random game (spectator); optional seed after flags. |
+| `npm run play -- --help` | Show usage. |
+
+Moves are chosen by index from the printed legal list; in the draw phase you can type `d` or `draw` for the single draw move.
 
 ---
 

@@ -16,11 +16,11 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 - [x] **Story 1.3** — Rules Engine  
   Completed: 2025-02-19 | Notes: Move types, getLegalMoves, applyMove (attack/defend/give_up/pass_attack/draw), cardBeats, getWinner; GameState.winner; IllegalMoveError; tests.
 
-- [ ] **Story 1.4** — Simulation Engine  
-  Completed: _ | Notes: _
+- [x] **Story 1.4** — Simulation Engine  
+  Completed: 2025-02-19 | Notes: cloneGameState, runFromState, simulateRandomGame; determinism + 1k stress tests.
 
-- [ ] **Story 1.5** — CLI Runner  
-  Completed: _ | Notes: _
+- [x] **Story 1.5** — CLI Runner  
+  Completed: 2025-02-19 | Notes: src/cli/play.ts (tsx); hot-seat, --bot, --auto; args/format helpers; README CLI table.
 
 ---
 
