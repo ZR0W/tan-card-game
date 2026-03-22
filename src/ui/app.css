@@ -37,6 +37,11 @@ body {
   color: inherit;
 }
 
+.app__dev-hint {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
 .app__hint {
   margin-top: 1.5rem;
   font-size: 0.85rem;
@@ -173,6 +178,87 @@ body {
   border-color: #7aa2f7;
 }
 
+.player-hand--acting {
+  outline: 2px solid #9ece6a;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
 .player-hand {
   margin-top: 1rem;
+}
+
+.move-panel {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #1e2030;
+  border-radius: 8px;
+  border: 1px solid #414868;
+}
+
+.move-panel__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.move-panel__error {
+  margin: 0 0 0.75rem;
+  color: #f7768e;
+  font-size: 0.9rem;
+}
+
+.move-panel__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.move-panel__btn {
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #565f89;
+  background: #292e42;
+  color: #c0caf5;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.move-panel__btn:hover:not(:disabled) {
+  background: #3b4261;
+}
+
+.move-panel__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.move-panel__empty {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.game-over {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #2d3f2d;
+  border: 1px solid #9ece6a;
+  border-radius: 8px;
+}
+
+.game-over__text {
+  margin: 0 0 0.75rem;
+}
+
+.game-over__btn {
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #9ece6a;
+  background: #1a1b26;
+  color: #c0caf5;
+  cursor: pointer;
+}
+
+.game-over__btn:hover {
+  background: #24283b;
 }

@@ -78,18 +78,23 @@ tan-card-game/
 ├── src/
 │   ├── engine/          (rules, state, deck — no UI)
 │   ├── cli/               (terminal runner)
+│   ├── state/
+│   │   └── useGameSession.ts
 │   ├── ui/
 │   │   ├── components/
 │   │   │   ├── GameBoard.tsx
+│   │   │   ├── GameOverBanner.tsx
+│   │   │   ├── MovePanel.tsx
 │   │   │   ├── OpponentHand.tsx
 │   │   │   ├── PlayerHand.tsx
 │   │   │   └── TurnIndicator.tsx
 │   │   ├── App.tsx
 │   │   ├── app.css
-│   │   └── cardFormat.ts
+│   │   ├── cardFormat.ts
+│   │   └── moveLabels.ts
 │   ├── main.tsx
 │   └── vite-env.d.ts
-│   (future: ai/, workers/, state/, utils/)
+│   (future: ai/, workers/, utils/)
 ├── tests/
 │   ├── engine/
 │   ├── cli/
@@ -264,6 +269,8 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 - Handle turn switching (human vs human)
 
 **Deliverable:** Two humans can play one full game in the browser.
+
+**How to run:** Start the app with [`npm run dev`](#getting-started) (see **Getting started**). **Hot-seat:** both players use the **Moves** buttons on the same screen—Player 0 is the bottom hand, Player 1 the top (both hands are shown face-up for local play). Changing the **deal seed** starts a new deal; after **game over**, use **New deal (same seed)** to replay.
 
 #### Story 2.3 — Extended UI & Visual Card Design
 

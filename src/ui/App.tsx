@@ -1,51 +1,74 @@
-import { useMemo, useState } from "react";
-import { createInitialGameState } from "@engine/index";
+import { useGameSession } from "../state/useGameSession";
 import type { PlayerId } from "@engine/gameState";
+import { getWinner } from "@engine/index";
 import { GameBoard } from "./components/GameBoard";
-import { OpponentHand } from "./components/OpponentHand";
+import { GameOverBanner } from "./components/GameOverBanner";
+import { MovePanel } from "./components/MovePanel";
 import { PlayerHand } from "./components/PlayerHand";
-import { TurnIndicator } from "./components/TurnIndicator";
+import { getActingPlayerId, TurnIndicator } from "./components/TurnIndicator";
 
 const DEFAULT_SEED = 12345;
 
 export function App() {
-  const [seed, setSeed] = useState(DEFAULT_SEED);
-  const gameState = useMemo(() => createInitialGameState(seed), [seed]);
+  const { seed, setSeed, state, dispatchMove, resetDeal, moveError } =
+    useGameSession(DEFAULT_SEED);
 
-  /** Story 2.1: fixed perspective — P0 is "you", P1 is opponent. */
   const localPlayer: PlayerId = 0;
-  const opponentId: PlayerId = 1;
+  const p1: PlayerId = 1;
+  const acting = getActingPlayerId(state);
+  const winner = getWinner(state);
+  const gameEnded = winner !== null;
+
+  const p0Acting =
+    !gameEnded && acting !== "draw" && acting !== null && acting === localPlayer;
+  const p1Acting =
+    !gameEnded && acting !== "draw" && acting !== null && acting === p1;
 
   return (
     <div className="app">
       <h1 className="app__title">Tan</h1>
+
       <div className="app__dev">
-        <label htmlFor="seed-input">Deal seed (dev)</label>
+        <label htmlFor="seed-input">Deal seed</label>
         <input
           id="seed-input"
           type="number"
           value={seed}
           onChange={(e) => setSeed(Number(e.target.value) || 0)}
         />
+        <span className="app__dev-hint">Changing seed starts a new deal.</span>
       </div>
 
-      <TurnIndicator state={gameState} localPlayer={localPlayer} />
+      <GameOverBanner state={state} onNewDeal={resetDeal} />
 
-      <OpponentHand
-        player={gameState.players[opponentId]}
-        label={`Player ${opponentId} (opponent)`}
-      />
-
-      <GameBoard state={gameState} />
+      <TurnIndicator state={state} localPlayer={localPlayer} />
 
       <PlayerHand
-        player={gameState.players[localPlayer]}
-        label={`Player ${localPlayer} (you)`}
+        player={state.players[p1]}
+        label="Player 1 (hot-seat)"
+        isLocal={false}
+        isActing={p1Acting}
+      />
+
+      <GameBoard state={state} />
+
+      <MovePanel
+        state={state}
+        onMove={dispatchMove}
+        disabled={gameEnded}
+        error={moveError}
+      />
+
+      <PlayerHand
+        player={state.players[localPlayer]}
+        label="Player 0 (you)"
         isLocal
+        isActing={p0Acting}
       />
 
       <p className="app__hint">
-        Story 2.1: display only. Moves will arrive in Story 2.2.
+        Two-player hot-seat: take turns using the move buttons. Player 0 is
+        &quot;you&quot; at the bottom; Player 1 sits at the top.
       </p>
     </div>
   );

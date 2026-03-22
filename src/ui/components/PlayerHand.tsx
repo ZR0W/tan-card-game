@@ -6,12 +6,16 @@ export interface PlayerHandProps {
   label: string;
   /** Highlight as the local player. */
   isLocal: boolean;
+  /** Emphasize when this player must choose a move. */
+  isActing?: boolean;
 }
 
-export function PlayerHand({ player, label, isLocal }: PlayerHandProps) {
+export function PlayerHand({ player, label, isLocal, isActing }: PlayerHandProps) {
   return (
     <section
-      className={`player-hand ${isLocal ? "player-hand--local" : ""}`}
+      className={`player-hand ${isLocal ? "player-hand--local" : ""} ${
+        isActing ? "player-hand--acting" : ""
+      }`}
       aria-label={label}
     >
       <h2 className="player-hand__title">
