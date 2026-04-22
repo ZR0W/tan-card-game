@@ -81,16 +81,24 @@ tan-card-game/
 │   ├── state/
 │   │   └── useGameSession.ts
 │   ├── ui/
+│   │   ├── assets/
+│   │   │   ├── cards/
+│   │   │   └── suits/
 │   │   ├── components/
+│   │   │   ├── CardBack.tsx
+│   │   │   ├── CardFace.tsx
 │   │   │   ├── GameBoard.tsx
 │   │   │   ├── GameOverBanner.tsx
+│   │   │   ├── HandRow.tsx
 │   │   │   ├── MovePanel.tsx
 │   │   │   ├── OpponentHand.tsx
 │   │   │   ├── PlayerHand.tsx
 │   │   │   └── TurnIndicator.tsx
+│   │   ├── styles/
 │   │   ├── App.tsx
 │   │   ├── app.css
 │   │   ├── cardFormat.ts
+│   │   ├── cardVisuals.ts
 │   │   └── moveLabels.ts
 │   ├── main.tsx
 │   └── vite-env.d.ts
@@ -287,6 +295,10 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 **Deliverable:** Board and hands communicate card identity at a glance; UI no longer relies on raw text strings alone for card content.
 
 **Dependencies / order:** Builds on Story 2.1. Can follow Story 2.2 (playable flow first) or overlap—visual polish is independent of move wiring.
+
+**How to run:** Use [`npm run dev`](#getting-started). Story 2.3 introduces card-face components (rank corners + suit icons), reusable card backs, responsive hand rows, and improved focus/contrast states while preserving Story 2.2 gameplay flow.
+
+**Asset notes:** Card/suit artwork is stored locally in `src/ui/assets` (no runtime CDN dependency).
 
 ---
 

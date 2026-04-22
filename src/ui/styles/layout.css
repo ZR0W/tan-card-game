@@ -1,0 +1,258 @@
+:root {
+  font-family: system-ui, Segoe UI, Roboto, sans-serif;
+  line-height: 1.4;
+  color: var(--text-main);
+  background: var(--bg-app);
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 2rem;
+}
+
+.app__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+}
+
+.app__dev {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.app__dev input {
+  width: 8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-main);
+  background: var(--bg-surface-2);
+  color: var(--text-main);
+}
+
+.app__dev-hint {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.app__hint {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.turn-indicator {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-surface-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-main);
+}
+
+.turn-indicator__phase {
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.turn-indicator__roles {
+  font-size: 0.95rem;
+}
+
+.turn-indicator__next {
+  margin-top: 0.45rem;
+  font-size: 0.95rem;
+  color: var(--accent-info);
+}
+
+.opponent-hand,
+.player-hand {
+  margin-top: 1rem;
+}
+
+.opponent-hand__title,
+.player-hand__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.opponent-hand__score,
+.player-hand__score {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.opponent-hand__count {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.player-hand--local {
+  border-top: 1px dashed var(--border-main);
+  padding-top: 0.7rem;
+}
+
+.player-hand--acting {
+  outline: 2px solid var(--accent-success);
+  outline-offset: 3px;
+  border-radius: var(--radius-md);
+}
+
+.game-board {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-main);
+}
+
+.game-board__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.game-board__round {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.game-board__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.game-board__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
+
+.game-board__cards {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.7rem;
+}
+
+.game-board__empty {
+  opacity: 0.65;
+  font-style: italic;
+}
+
+.move-panel {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--bg-surface-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-main);
+}
+
+.move-panel__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.move-panel__error {
+  margin: 0 0 0.75rem;
+  color: var(--accent-danger);
+  font-size: 0.9rem;
+}
+
+.move-panel__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.move-panel__btn {
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: #2b3150;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.move-panel__btn:hover:not(:disabled) {
+  background: #3a4470;
+}
+
+.move-panel__btn:focus-visible,
+.game-over__btn:focus-visible {
+  outline: 2px solid var(--accent-info);
+  outline-offset: 2px;
+}
+
+.move-panel__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.move-panel__empty {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.game-over {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #2d3f2d;
+  border: 1px solid var(--accent-success);
+  border-radius: var(--radius-md);
+}
+
+.game-over__text {
+  margin: 0 0 0.75rem;
+}
+
+.game-over__btn {
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-success);
+  background: var(--bg-app);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.game-over__btn:hover {
+  background: var(--bg-surface-2);
+}
+
+@media (max-width: 760px) {
+  .app {
+    padding: 0.75rem;
+  }
+
+  .game-board__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .hand-row,
+  .game-board__cards,
+  .move-panel__buttons {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.2rem;
+  }
+}

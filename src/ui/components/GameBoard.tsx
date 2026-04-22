@@ -1,5 +1,6 @@
 import type { GameState } from "@engine/gameState";
 import { formatCard } from "../cardFormat";
+import { CardFace } from "./CardFace";
 
 export interface GameBoardProps {
   state: GameState;
@@ -21,12 +22,10 @@ export function GameBoard({ state }: GameBoardProps) {
           <span className="game-board__label">Attacks</span>
           <div className="game-board__cards">
             {attacks.length === 0 ? (
-              <span className="game-board__empty">—</span>
+              <span className="game-board__empty">No attacks yet</span>
             ) : (
               attacks.map((c, i) => (
-                <span key={`a-${i}`} className="card card--face-up">
-                  {formatCard(c)}
-                </span>
+                <CardFace key={`a-${i}`} card={c} size="sm" />
               ))
             )}
           </div>
@@ -35,12 +34,10 @@ export function GameBoard({ state }: GameBoardProps) {
           <span className="game-board__label">Defences</span>
           <div className="game-board__cards">
             {defences.length === 0 ? (
-              <span className="game-board__empty">—</span>
+              <span className="game-board__empty">No defences yet</span>
             ) : (
               defences.map((c, i) => (
-                <span key={`d-${i}`} className="card card--face-up">
-                  {formatCard(c)}
-                </span>
+                <CardFace key={`d-${i}`} card={c} size="sm" />
               ))
             )}
           </div>

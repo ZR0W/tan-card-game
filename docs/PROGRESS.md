@@ -32,8 +32,8 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 - [x] **Story 2.2** — Move Input & Turn Flow  
   Completed: 2025-03-22 | Notes: useGameSession; MovePanel + applyMove; both hands face-up hot-seat; game-over banner; RTL tests.
 
-- [ ] **Story 2.3** — Extended UI & Visual Card Design  
-  Completed: _ | Notes: _
+- [x] **Story 2.3** — Extended UI & Visual Card Design  
+  Completed: 2025-03-22 | Notes: CardFace/CardBack/HandRow, local SVG suit+back assets, split style tokens/layout/cards, responsive and accessibility polish.
 
 ---
 

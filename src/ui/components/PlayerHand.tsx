@@ -1,5 +1,5 @@
 import type { PlayerState } from "@engine/gameState";
-import { formatCard } from "../cardFormat";
+import { HandRow } from "./HandRow";
 
 export interface PlayerHandProps {
   player: PlayerState;
@@ -22,13 +22,7 @@ export function PlayerHand({ player, label, isLocal, isActing }: PlayerHandProps
         {label}
         <span className="player-hand__score">Score: {player.score}</span>
       </h2>
-      <div className="player-hand__cards">
-        {player.hand.map((c, i) => (
-          <span key={`${player.id}-${i}`} className="card card--face-up">
-            {formatCard(c)}
-          </span>
-        ))}
-      </div>
+      <HandRow cards={player.hand} />
     </section>
   );
 }

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Spades">
+  <path
+    fill="currentColor"
+    d="M32 8c9 10 24 20 24 32 0 7-5 13-13 13-5 0-9-2-11-6-2 4-6 6-11 6-8 0-13-6-13-13 0-12 15-22 24-32Z"
+  />
+  <path fill="currentColor" d="M28 42h8v14h-8zM24 56h16a8 8 0 0 1-16 0z" />
+</svg>
