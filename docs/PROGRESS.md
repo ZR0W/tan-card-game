@@ -39,11 +39,14 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 
 ## EPIC 3 — Heuristic AI
 
-- [ ] **Story 3.1** — Evaluation Function  
-  Completed: _ | Notes: _
+- [x] **Story 3.1** — Evaluation Function  
+  Completed: 2026-04-27 | Notes: `evaluateMetrics` / `combineMetrics` / `evaluateState` in `src/ai/`; Vitest `tests/ai/evaluation.test.ts`.
 
-- [ ] **Story 3.2** — Greedy Bot  
-  Completed: _ | Notes: _
+- [x] **Story 3.2** — Greedy Bot  
+  Completed: 2026-04-27 | Notes: `chooseGreedyMove` in `src/ai/heuristicBot.ts`; wired in UI (vs-bot checkbox + `useGameSession`) and CLI `--bot`; tests `tests/ai/heuristicBot.test.ts`.
+
+- [x] **Story 3.3** — Game audit log (UI)  
+  Completed: 2026-04-27 | Notes: `src/ui/gameLog.ts`, `GameAuditPanel`, `useGameSession` log + `advanceSession`; `tests/ui/gameLog.test.ts`.
 
 ---
 

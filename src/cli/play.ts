@@ -13,6 +13,7 @@ import {
 } from "../engine";
 import type { GameState } from "../engine/gameState";
 import type { Move } from "../engine/rules";
+import { chooseGreedyMove } from "../ai/heuristicBot";
 import { parsePlayArgs, playCliHelpText } from "./args";
 import { describeMove, formatGameState } from "./format";
 
@@ -30,6 +31,9 @@ function pickBotMove(
 ): Move {
   return moves[rng.nextInt(0, moves.length - 1)]!;
 }
+
+/** Player 1 in `--bot` mode uses greedy heuristic (same core as the web UI vs-bot). */
+const BOT_PLAYER = 1 as const;
 
 function parseMoveIndex(line: string, moves: Move[]): number | null {
   const t = line.trim().toLowerCase();
@@ -64,7 +68,6 @@ async function runInteractive(
   botMode: boolean
 ): Promise<void> {
   let state = createInitialGameState(seed);
-  const rng = createRng(seed + 9999);
   const rl = readline.createInterface({ input, output });
 
   try {
@@ -78,7 +81,7 @@ async function runInteractive(
 
       let move: Move;
       if (shouldBotAct(state, botMode)) {
-        move = pickBotMove(moves, rng);
+        move = chooseGreedyMove(state, BOT_PLAYER) ?? moves[0]!;
         const who =
           state.phase === "draw" ? "Auto" : "Bot (P1)";
         console.log(`${who}: ${describeMove(move, state)}`);

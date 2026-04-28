@@ -1,47 +1,92 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import {
-  applyMove,
   createInitialGameState,
   IllegalMoveError,
 } from "@engine/index";
 import type { Move } from "@engine/rules";
 import type { GameState } from "@engine/gameState";
+import { advanceSession } from "./advanceSession";
+import { initialDealLines } from "../ui/gameLog";
 
-export function useGameSession(initialSeed: number) {
+type SessionModel = {
+  game: GameState;
+  log: string[];
+};
+
+type SessionAction =
+  | { type: "reset"; seed: number }
+  | { type: "moveOk"; game: GameState; appended: string[] };
+
+function sessionReducer(
+  state: SessionModel,
+  action: SessionAction
+): SessionModel {
+  switch (action.type) {
+    case "reset": {
+      const game = createInitialGameState(action.seed);
+      return { game, log: initialDealLines(action.seed, game) };
+    }
+    case "moveOk":
+      return {
+        game: action.game,
+        log: [...state.log, ...action.appended],
+      };
+    default:
+      return state;
+  }
+}
+
+function initSession(seed: number): SessionModel {
+  const game = createInitialGameState(seed);
+  return { game, log: initialDealLines(seed, game) };
+}
+
+export function useGameSession(initialSeed: number, vsBot = false) {
   const [seed, setSeedState] = useState(initialSeed);
-  const [state, setState] = useState<GameState>(() =>
-    createInitialGameState(initialSeed)
-  );
+  const [session, dispatch] = useReducer(sessionReducer, initialSeed, initSession);
   const [moveError, setMoveError] = useState<string | null>(null);
+
+  const prevVsBot = useRef(vsBot);
+  useEffect(() => {
+    if (prevVsBot.current === vsBot) return;
+    prevVsBot.current = vsBot;
+    dispatch({ type: "reset", seed });
+    setMoveError(null);
+  }, [vsBot, seed]);
 
   const setSeed = useCallback((next: number) => {
     setSeedState(next);
-    setState(createInitialGameState(next));
+    dispatch({ type: "reset", seed: next });
     setMoveError(null);
   }, []);
 
   const resetDeal = useCallback(() => {
-    setState(createInitialGameState(seed));
+    dispatch({ type: "reset", seed });
     setMoveError(null);
   }, [seed]);
 
-  const dispatchMove = useCallback((move: Move) => {
-    try {
-      setMoveError(null);
-      setState((prev) => applyMove(prev, move));
-    } catch (e) {
-      if (e instanceof IllegalMoveError) {
-        setMoveError(e.message);
-        return;
+  const dispatchMove = useCallback(
+    (move: Move) => {
+      try {
+        setMoveError(null);
+        const { next, events } = advanceSession(session.game, move, vsBot);
+        dispatch({ type: "moveOk", game: next, appended: events });
+      } catch (e) {
+        if (e instanceof IllegalMoveError) {
+          setMoveError(e.message);
+          return;
+        }
+        throw e;
       }
-      throw e;
-    }
-  }, []);
+    },
+    [session.game, vsBot]
+  );
 
   return {
     seed,
     setSeed,
-    state,
+    state: session.game,
+    gameLog: session.log,
     dispatchMove,
     resetDeal,
     moveError,

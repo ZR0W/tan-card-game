@@ -10,9 +10,104 @@ body {
 }
 
 .app {
-  max-width: 1000px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 1rem 1.25rem 2rem;
+}
+
+.app-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 880px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.app-layout__main {
+  min-width: 0;
+}
+
+.game-audit {
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-2);
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  max-height: min(70vh, 560px);
+  position: sticky;
+  top: 0.5rem;
+}
+
+.game-audit__chrome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.game-audit__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-main);
+  background: var(--bg-app);
+  color: var(--text-main);
+}
+
+.game-audit__toggle-icon {
+  font-size: 0.65rem;
+  opacity: 0.85;
+}
+
+.game-audit__search-label {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.game-audit__search {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.3rem 0.45rem;
+  font: inherit;
+  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-main);
+  background: var(--bg-app);
+  color: var(--text-main);
+}
+
+.game-audit__body {
+  overflow: auto;
+  flex: 1;
+  margin-top: 0.45rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--border-main);
+}
+
+.game-audit__list {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.82rem;
+}
+
+.game-audit__item {
+  margin-bottom: 0.35rem;
+}
+
+.game-audit__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
 }
 
 .app__title {
@@ -41,6 +136,14 @@ body {
 .app__dev-hint {
   font-size: 0.8rem;
   opacity: 0.8;
+}
+
+.app__vs-bot {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-basis: 100%;
+  cursor: pointer;
 }
 
 .app__hint {

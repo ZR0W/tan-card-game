@@ -240,7 +240,7 @@ tan-card-game/
 |--------|-------------|
 | `npm run play` | Hot-seat two humans; default seed `12345` (reproducible deal). |
 | `npm run play -- 42` | Same with seed `42`. |
-| `npm run play -- --bot` | You are player 0; player 1 plays random legal moves. |
+| `npm run play -- --bot` | You are player 0; player 1 uses greedy heuristic (one-step lookahead). |
 | `npm run play -- --auto` | Print a full random game (spectator); optional seed after flags. |
 | `npm run play -- --help` | Show usage. |
 
@@ -320,6 +320,8 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 
 **Deliverable:** `evaluateState(state, player): number`
 
+**Implementation:** Internal `EvalMetrics` plus `combineMetrics` in [`src/ai/evaluation.ts`](src/ai/evaluation.ts); feature extraction in [`src/ai/metrics.ts`](src/ai/metrics.ts). Tests in [`tests/ai/evaluation.test.ts`](tests/ai/evaluation.test.ts).
+
 #### Story 3.2 — Greedy Bot
 
 **Objective:** One-step lookahead bot.
@@ -332,6 +334,29 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 - Choose highest scoring move
 
 **Deliverable:** Playable heuristic AI.
+
+**Implementation:** [`src/ai/heuristicBot.ts`](src/ai/heuristicBot.ts) exports `chooseGreedyMove(state, botPlayer)`. Tests in [`tests/ai/heuristicBot.test.ts`](tests/ai/heuristicBot.test.ts).
+
+**How to run:**
+
+- **Browser:** [`npm run dev`](#getting-started), then enable **Play vs bot (Player 1 uses heuristic AI)** so P1 moves run automatically after your moves (same core as CLI `--bot`).
+- **CLI:** `npm run play -- --bot` (see Epic 1 **CLI usage** table above) — greedy lookahead for player 1. **`--auto`** is still an all-random spectator game for stress/replay.
+
+#### Story 3.3 — Game audit log (UI)
+
+**Objective:** Match CLI-style transparency in the browser so you can QA state transitions without reading the terminal.
+
+**Tasks:**
+
+- Append-only event log derived from each rules transition (human and bot moves).
+- Record deal/trump, attacks/defences, round end (pass / give-up), and draw-phase refills (who drew which cards).
+- Surface context for attacker/defender roles and phase changes where helpful.
+
+**Deliverable:** Collapsible, **searchable** side panel (**open by default**) listing chronological game events.
+
+**Implementation:** [`src/ui/gameLog.ts`](src/ui/gameLog.ts) builds strings from `(prevState, move, nextState)`; [`src/state/useGameSession.ts`](src/state/useGameSession.ts) accumulates lines; [`src/ui/components/GameAuditPanel.tsx`](src/ui/components/GameAuditPanel.tsx) renders filter UI.
+
+**How to run:** [`npm run dev`](#getting-started). The **Audit log** panel is on the right (stacks below the board on narrow screens). Use the search box to filter lines; collapse the panel if you need more board space.
 
 ---
 
