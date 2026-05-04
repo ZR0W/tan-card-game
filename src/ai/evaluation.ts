@@ -1,3 +1,11 @@
+/**
+ * @deprecatedForProduction — `evaluateState` delegates to `evaluateMetrics`, which reads
+ * the opponent’s **hidden** hand on the real `GameState`. That is clairvoyant for imperfect
+ * information and must **not** drive production move selection on the true state.
+ *
+ * Still useful for: unit tests, and (after Epic 4) scoring **determinized** worlds where
+ * the full state is an explicit sample, not omniscience.
+ */
 import type { GameState, PlayerId } from "@engine/gameState";
 import { getWinner } from "@engine/rules";
 import type { EvalMetrics } from "./metrics";
@@ -26,6 +34,8 @@ export function combineMetrics(m: EvalMetrics): number {
 /**
  * Scalar score for minimax-style search: higher is better for `player`.
  * Terminal positions dominate heuristic noise.
+ *
+ * **Not for production bot on live `GameState`** — see file comment.
  */
 export function evaluateState(state: GameState, player: PlayerId): number {
   const w = getWinner(state);

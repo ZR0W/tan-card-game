@@ -46,7 +46,7 @@ export function App() {
             checked={vsBot}
             onChange={(e) => setVsBot(e.target.checked)}
           />{" "}
-          Play vs bot (Player 1 uses heuristic AI)
+          Play vs bot (Player 1: random play until Epic 4)
         </label>
       </div>
 
@@ -58,7 +58,7 @@ export function App() {
 
           <PlayerHand
             player={state.players[p1]}
-            label={vsBot ? "Player 1 (heuristic bot)" : "Player 1 (hot-seat)"}
+            label={vsBot ? "Player 1 (random bot)" : "Player 1 (hot-seat)"}
             isLocal={false}
             isActing={p1Acting}
           />
@@ -80,9 +80,9 @@ export function App() {
           />
 
           <p className="app__hint">
-            {vsBot
-              ? "You are Player 0 (bottom). Player 1 is the heuristic bot and moves automatically after your turns."
-              : 'Two-player hot-seat: take turns using the move buttons. Player 0 is you at the bottom; Player 1 sits at the top.'}
+        {vsBot
+          ? "You are Player 0 (bottom). Player 1 is a random-move bot and moves automatically after your turns (until Epic 4 Monte Carlo)."
+          : 'Two-player hot-seat: take turns using the move buttons. Player 0 is you at the bottom; Player 1 sits at the top.'}
           </p>
         </div>
 

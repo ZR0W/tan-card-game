@@ -1,3 +1,12 @@
+/**
+ * @deprecatedForProduction — `chooseGreedyMove` scores successors with `evaluateState`, which
+ * uses opponent hole cards on the real `GameState`. That makes the greedy one-ply bot
+ * **clairvoyant**. Production UI / CLI bot uses **random legal moves** until Epic 4
+ * (determinization + Monte Carlo) supplies honest full-state samples.
+ *
+ * **Retained** for regression / experiments and for possible reuse **only on determinized**
+ * clones after `generateDeterminizedState` exists.
+ */
 import type { GameState, PlayerId } from "@engine/gameState";
 import {
   applyMove,
@@ -34,6 +43,8 @@ function compareMoves(a: Move, b: Move): number {
 /**
  * One-step lookahead: pick the legal move whose resulting state maximizes
  * `evaluateState` for `botPlayer`. Tie-break: lexicographic move key.
+ *
+ * **Do not call for live play** on the true deal — see file comment.
  */
 export function chooseGreedyMove(
   state: GameState,

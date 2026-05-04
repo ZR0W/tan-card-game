@@ -43,7 +43,7 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
   Completed: 2026-04-27 | Notes: `evaluateMetrics` / `combineMetrics` / `evaluateState` in `src/ai/`; Vitest `tests/ai/evaluation.test.ts`.
 
 - [x] **Story 3.2** — Greedy Bot  
-  Completed: 2026-04-27 | Notes: `chooseGreedyMove` in `src/ai/heuristicBot.ts`; wired in UI (vs-bot checkbox + `useGameSession`) and CLI `--bot`; tests `tests/ai/heuristicBot.test.ts`.
+  Completed: 2026-04-27 | Notes: `chooseGreedyMove` retained for tests only (PI/clairvoyance on live state — see code comments). Production vs-bot / `--bot`: random legal moves via `advanceSession` + `createBotPlayRng` until Epic 4.
 
 - [x] **Story 3.3** — Game audit log (UI)  
   Completed: 2026-04-27 | Notes: `src/ui/gameLog.ts`, `GameAuditPanel`, `useGameSession` log + `advanceSession`; `tests/ui/gameLog.test.ts`.
@@ -57,6 +57,9 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 
 - [ ] **Story 4.2** — Monte Carlo Move Evaluation  
   Completed: _ | Notes: _
+
+- [ ] **Story 4.3** — Worker + UI integration for MC  
+  Completed: _ | Notes: Optional split; see README Epic 4.
 
 ---
 

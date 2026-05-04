@@ -1,3 +1,10 @@
+/**
+ * Tests for `chooseGreedyMove` — **experimental / historical** one-ply greedy bot.
+ * Production UI and CLI use **random legal moves** for the bot (see Epic 3 / 4 README bridge);
+ * this module scores full `GameState` including hidden opponent cards (clairvoyant) and is
+ * not wired into live play until evaluation is information-set honest or runs only on
+ * determinized worlds (Epic 4).
+ */
 import { describe, it, expect } from "vitest";
 import {
   createInitialGameState,

@@ -5,7 +5,8 @@ import {
 } from "@engine/index";
 import type { Move } from "@engine/rules";
 import type { GameState } from "@engine/gameState";
-import { advanceSession } from "./advanceSession";
+import type { Rng } from "@engine/rng";
+import { advanceSession, createBotPlayRng } from "./advanceSession";
 import { initialDealLines } from "../ui/gameLog";
 
 type SessionModel = {
@@ -45,22 +46,26 @@ export function useGameSession(initialSeed: number, vsBot = false) {
   const [seed, setSeedState] = useState(initialSeed);
   const [session, dispatch] = useReducer(sessionReducer, initialSeed, initSession);
   const [moveError, setMoveError] = useState<string | null>(null);
+  const botRngRef = useRef<Rng>(createBotPlayRng(initialSeed));
 
   const prevVsBot = useRef(vsBot);
   useEffect(() => {
     if (prevVsBot.current === vsBot) return;
     prevVsBot.current = vsBot;
+    botRngRef.current = createBotPlayRng(seed);
     dispatch({ type: "reset", seed });
     setMoveError(null);
   }, [vsBot, seed]);
 
   const setSeed = useCallback((next: number) => {
     setSeedState(next);
+    botRngRef.current = createBotPlayRng(next);
     dispatch({ type: "reset", seed: next });
     setMoveError(null);
   }, []);
 
   const resetDeal = useCallback(() => {
+    botRngRef.current = createBotPlayRng(seed);
     dispatch({ type: "reset", seed });
     setMoveError(null);
   }, [seed]);
@@ -69,7 +74,12 @@ export function useGameSession(initialSeed: number, vsBot = false) {
     (move: Move) => {
       try {
         setMoveError(null);
-        const { next, events } = advanceSession(session.game, move, vsBot);
+        const { next, events } = advanceSession(
+          session.game,
+          move,
+          vsBot,
+          botRngRef.current
+        );
         dispatch({ type: "moveOk", game: next, appended: events });
       } catch (e) {
         if (e instanceof IllegalMoveError) {

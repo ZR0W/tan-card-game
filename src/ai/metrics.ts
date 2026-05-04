@@ -1,3 +1,18 @@
+/**
+ * @deprecatedForProduction — kept for tests and future experiments only.
+ *
+ * `evaluateMetrics` reads the **opponent’s full hand** (`state.players[opp].hand`) for
+ * `trumpEquity` and `rankStrength`. Tan is **imperfect information**: a real seat cannot
+ * see hole cards. Scoring the live `GameState` that way is **clairvoyant** (perfect-information
+ * cheat), not a valid opponent model.
+ *
+ * Acceptable uses later: (1) metrics computed from a **partial observation** that omits
+ * opponent card identities, or (2) scoring **only inside a determinized / sampled** full
+ * state (Epic 4) where the opponent hand is a **hypothesis**, not the true deal.
+ *
+ * The production bot does **not** use this module for move choice until one of the above
+ * is implemented (see Epic 4 bridge notes in README).
+ */
 import type { Card } from "@engine/types";
 import { rankOrder } from "@engine/rules";
 import type { GameState, PlayerId } from "@engine/gameState";
@@ -28,6 +43,9 @@ function sumRankPower(hand: Card[]): number {
 
 /**
  * Pure numeric features for `player`: higher combined (after weights) ⇒ better for that player.
+ *
+ * **Do not use on the live game record for bot play** — see file comment: uses opponent
+ * hole cards. Safe only for tests or hypothetical full states (e.g. after determinization).
  */
 export function evaluateMetrics(state: GameState, player: PlayerId): EvalMetrics {
   const opp = opponentOf(player);

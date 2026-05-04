@@ -13,7 +13,7 @@ import {
 } from "../engine";
 import type { GameState } from "../engine/gameState";
 import type { Move } from "../engine/rules";
-import { chooseGreedyMove } from "../ai/heuristicBot";
+import { createBotPlayRng } from "../state/advanceSession";
 import { parsePlayArgs, playCliHelpText } from "./args";
 import { describeMove, formatGameState } from "./format";
 
@@ -31,9 +31,6 @@ function pickBotMove(
 ): Move {
   return moves[rng.nextInt(0, moves.length - 1)]!;
 }
-
-/** Player 1 in `--bot` mode uses greedy heuristic (same core as the web UI vs-bot). */
-const BOT_PLAYER = 1 as const;
 
 function parseMoveIndex(line: string, moves: Move[]): number | null {
   const t = line.trim().toLowerCase();
@@ -68,6 +65,8 @@ async function runInteractive(
   botMode: boolean
 ): Promise<void> {
   let state = createInitialGameState(seed);
+  /** Random legal moves for P1 until Epic 4 (same RNG offset as web `advanceSession`). */
+  const botRng = createBotPlayRng(seed);
   const rl = readline.createInterface({ input, output });
 
   try {
@@ -81,7 +80,7 @@ async function runInteractive(
 
       let move: Move;
       if (shouldBotAct(state, botMode)) {
-        move = chooseGreedyMove(state, BOT_PLAYER) ?? moves[0]!;
+        move = pickBotMove(moves, botRng);
         const who =
           state.phase === "draw" ? "Auto" : "Bot (P1)";
         console.log(`${who}: ${describeMove(move, state)}`);

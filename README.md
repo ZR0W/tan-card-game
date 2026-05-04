@@ -240,7 +240,7 @@ tan-card-game/
 |--------|-------------|
 | `npm run play` | Hot-seat two humans; default seed `12345` (reproducible deal). |
 | `npm run play -- 42` | Same with seed `42`. |
-| `npm run play -- --bot` | You are player 0; player 1 uses greedy heuristic (one-step lookahead). |
+| `npm run play -- --bot` | You are player 0; player 1 plays **random legal moves** (seeded; honest imperfect info until Epic 4). |
 | `npm run play -- --auto` | Print a full random game (spectator); optional seed after flags. |
 | `npm run play -- --help` | Show usage. |
 
@@ -320,7 +320,7 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 
 **Deliverable:** `evaluateState(state, player): number`
 
-**Implementation:** Internal `EvalMetrics` plus `combineMetrics` in [`src/ai/evaluation.ts`](src/ai/evaluation.ts); feature extraction in [`src/ai/metrics.ts`](src/ai/metrics.ts). Tests in [`tests/ai/evaluation.test.ts`](tests/ai/evaluation.test.ts).
+**Implementation:** Internal `EvalMetrics` plus `combineMetrics` in [`src/ai/evaluation.ts`](src/ai/evaluation.ts); feature extraction in [`src/ai/metrics.ts`](src/ai/metrics.ts). Tests in [`tests/ai/evaluation.test.ts`](tests/ai/evaluation.test.ts). **Caveat:** metrics read the opponent’s full hand; see file comments — not for production scoring on the **true** state; safe on determinized samples (Epic 4).
 
 #### Story 3.2 — Greedy Bot
 
@@ -335,12 +335,12 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 
 **Deliverable:** Playable heuristic AI.
 
-**Implementation:** [`src/ai/heuristicBot.ts`](src/ai/heuristicBot.ts) exports `chooseGreedyMove(state, botPlayer)`. Tests in [`tests/ai/heuristicBot.test.ts`](tests/ai/heuristicBot.test.ts).
+**Implementation:** [`src/ai/heuristicBot.ts`](src/ai/heuristicBot.ts) still exports `chooseGreedyMove` for **tests and future experiments only** (see file comments: it used full `GameState` including hidden opponent cards — clairvoyant for imperfect information). **Production bot** (`--bot` / vs-bot) uses **random legal moves** via [`advanceSession`](src/state/advanceSession.ts) until Epic 4. Tests in [`tests/ai/heuristicBot.test.ts`](tests/ai/heuristicBot.test.ts) cover the greedy helper in isolation.
 
 **How to run:**
 
-- **Browser:** [`npm run dev`](#getting-started), then enable **Play vs bot (Player 1 uses heuristic AI)** so P1 moves run automatically after your moves (same core as CLI `--bot`).
-- **CLI:** `npm run play -- --bot` (see Epic 1 **CLI usage** table above) — greedy lookahead for player 1. **`--auto`** is still an all-random spectator game for stress/replay.
+- **Browser:** [`npm run dev`](#getting-started), then enable **Play vs bot** so P1 plays **random legal moves** after your turns (same RNG scheme as CLI `--bot`).
+- **CLI:** `npm run play -- --bot` (see Epic 1 **CLI usage** table above). **`--auto`** is still an all-random spectator game for stress/replay.
 
 #### Story 3.3 — Game audit log (UI)
 
@@ -362,39 +362,45 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 
 ### EPIC 4 — Monte Carlo AI
 
-**Goal:** Introduce probabilistic reasoning.
+**Goal:** Introduce **probabilistic** move choice that never treats the **true** opponent hand as visible. Bridge from Epic 3: the old greedy scorer read hole cards on the live `GameState` (clairvoyant); production bot is random until this epic ships.
 
-**Worker timing:** To keep the UI responsive, run simulations in a Web Worker from the start of this epic (or as the first story). Either add a minimal "run simulations in worker" task here or complete Epic 5 (Performance) before raising simulation counts.
+**Design rule:** Any **full** `GameState` used for search or rollouts must come from **`generateDeterminizedState`** (or equivalent)—a sampled completion of unknown cards—not from reading the opponent’s actual deal in the running game record.
 
 #### Story 4.1 — Determinization
 
-**Objective:** Handle hidden information.
-
-Use the same seedable RNG as the engine. The unknown set is exactly "deck minus all known cards"; assign those to opponent hand and remaining deck consistently (e.g. shuffle the unknown set once, then assign). That keeps determinization reproducible and testable.
+**Objective:** Turn a **viewer’s observation** into one consistent full world.
 
 **Tasks:**
 
-- Identify unknown cards (deck minus known/cards in play)
-- Randomly assign opponent hand from unknown set (RNG-driven)
-- Randomize remaining deck from remainder (same RNG, consistent ordering)
-- Validate consistency (no duplicate or invalid cards)
+- Define unknown multiset: 52 cards minus everything **known to the viewer** (own hand, table, discard, public deck count / turn-up as rules allow).
+- Use the same **seedable RNG** as the engine: shuffle unknowns once; assign to **opponent hand** and **remaining deck order**; validate no duplicates and all known cards fixed.
 
-**Deliverable:** `generateDeterminizedState(partialState)`
+**Deliverable:** `generateDeterminizedState(partialState, rng)` (or `(state, viewer, rng)`), reproducible from RNG seed, covered by Vitest.
 
-#### Story 4.2 — Monte Carlo Move Evaluation
+#### Story 4.2 — Monte Carlo move choice
 
-**Objective:** Evaluate moves via simulation.
+**Objective:** Pick moves by **simulated** win rate on **determinized** worlds, not by scoring the live state with hidden cards.
 
 **Tasks:**
 
-- For each legal move:
-  - Run N simulations
-  - Perform random playout
-  - Record win/loss
-  - Compute win rate
-- Select best move
+- From the **real** observation, for each **legal** move: apply the move on a determinized clone (or apply then determinize per your pipeline doc).
+- For each of **K** determinizations (or a total sample budget): run **N** random rollouts to terminal (reuse / extend [`runFromState`](src/engine/simulator.ts)); record win/loss for the **viewer**.
+- Average score across samples; choose the move with best **mean** estimate. Document whether “100+ simulations per move” means per determinization or **total** budget across K worlds.
 
-**Deliverable:** Monte Carlo bot (100+ simulations per move).
+**Note:** Using the existing `evaluateState` / `chooseGreedyMove` **inside** a determinized hypothetical is allowed (full information **in that sample**). Production must **never** call them on the **true** `GameState` for bot play.
+
+**Deliverable:** Monte Carlo bot wired to CLI and/or UI (replace random bot path from Epic 3 bridge).
+
+#### Story 4.3 — Worker and UI integration (optional split)
+
+**Objective:** Keep the main thread responsive under high simulation counts.
+
+**Tasks:**
+
+- Run the MC / rollout loop in a **Web Worker** (message passing from [`useGameSession`](src/state/useGameSession.ts) or a dedicated hook).
+- Add caps or progress for GitHub Pages (align with Epic 5 if you merge worker work there).
+
+**Deliverable:** Bot move search does not freeze the board; documented limits.
 
 ---
 
@@ -510,9 +516,9 @@ Each phase is done when its **Definition of Done** is met.
 
 ### Phase 2
 
-- Heuristic AI complete (Epic 3)
+- Epic 3 bot + audit UI (random-move bot until Epic 4; greedy code retained for tests)
 
-**Definition of Done:** Player can play vs heuristic bot; bot chooses legal moves and game completes.
+**Definition of Done:** Player can play vs bot; bot chooses random legal moves and game completes (until Epic 4 MC).
 
 ### Phase 3
 
