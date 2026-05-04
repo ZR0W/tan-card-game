@@ -43,7 +43,7 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
   Completed: 2026-04-27 | Notes: `evaluateMetrics` / `combineMetrics` / `evaluateState` in `src/ai/`; Vitest `tests/ai/evaluation.test.ts`.
 
 - [x] **Story 3.2** — Greedy Bot  
-  Completed: 2026-04-27 | Notes: `chooseGreedyMove` retained for tests only (PI/clairvoyance on live state — see code comments). Production vs-bot / `--bot`: random legal moves via `advanceSession` + `createBotPlayRng` until Epic 4.
+  Completed: 2026-04-27 | Notes: `chooseGreedyMove` tests-only. Production vs-bot / `--bot`: Epic 4 MC via `chooseMonteCarloMove` + `advanceSession`.
 
 - [x] **Story 3.3** — Game audit log (UI)  
   Completed: 2026-04-27 | Notes: `src/ui/gameLog.ts`, `GameAuditPanel`, `useGameSession` log + `advanceSession`; `tests/ui/gameLog.test.ts`.
@@ -52,11 +52,11 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 
 ## EPIC 4 — Monte Carlo AI
 
-- [ ] **Story 4.1** — Determinization  
-  Completed: _ | Notes: _
+- [x] **Story 4.1** — Determinization  
+  Completed: 2026-04-27 | Notes: `generateDeterminizedState` in `src/ai/determinization.ts`; `tests/ai/determinization.test.ts`.
 
-- [ ] **Story 4.2** — Monte Carlo Move Evaluation  
-  Completed: _ | Notes: _
+- [x] **Story 4.2** — Monte Carlo Move Evaluation  
+  Completed: 2026-04-27 | Notes: `chooseMonteCarloMove`, `resolveMoveForDeterminized` in `src/ai/monteCarlo.ts`; `advanceSession` + CLI `--bot`; `tests/ai/monteCarlo.test.ts`.
 
 - [ ] **Story 4.3** — Worker + UI integration for MC  
   Completed: _ | Notes: Optional split; see README Epic 4.

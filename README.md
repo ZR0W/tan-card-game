@@ -240,7 +240,7 @@ tan-card-game/
 |--------|-------------|
 | `npm run play` | Hot-seat two humans; default seed `12345` (reproducible deal). |
 | `npm run play -- 42` | Same with seed `42`. |
-| `npm run play -- --bot` | You are player 0; player 1 plays **random legal moves** (seeded; honest imperfect info until Epic 4). |
+| `npm run play -- --bot` | You are player 0; player 1 uses **Monte Carlo** (determinization + rollouts; see Epic 4). |
 | `npm run play -- --auto` | Print a full random game (spectator); optional seed after flags. |
 | `npm run play -- --help` | Show usage. |
 
@@ -335,11 +335,11 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 
 **Deliverable:** Playable heuristic AI.
 
-**Implementation:** [`src/ai/heuristicBot.ts`](src/ai/heuristicBot.ts) still exports `chooseGreedyMove` for **tests and future experiments only** (see file comments: it used full `GameState` including hidden opponent cards — clairvoyant for imperfect information). **Production bot** (`--bot` / vs-bot) uses **random legal moves** via [`advanceSession`](src/state/advanceSession.ts) until Epic 4. Tests in [`tests/ai/heuristicBot.test.ts`](tests/ai/heuristicBot.test.ts) cover the greedy helper in isolation.
+**Implementation:** [`src/ai/heuristicBot.ts`](src/ai/heuristicBot.ts) still exports `chooseGreedyMove` for **tests only** (clairvoyant on live state — see file comments). **Production bot** (`--bot` / vs-bot) uses **Monte Carlo** via [`chooseMonteCarloMove`](src/ai/monteCarlo.ts) inside [`advanceSession`](src/state/advanceSession.ts) (Epic 4.2). Tests in [`tests/ai/heuristicBot.test.ts`](tests/ai/heuristicBot.test.ts) cover the greedy helper in isolation.
 
 **How to run:**
 
-- **Browser:** [`npm run dev`](#getting-started), then enable **Play vs bot** so P1 plays **random legal moves** after your turns (same RNG scheme as CLI `--bot`).
+- **Browser:** [`npm run dev`](#getting-started), then enable **Play vs bot** so P1 uses the same MC bot as CLI `--bot`.
 - **CLI:** `npm run play -- --bot` (see Epic 1 **CLI usage** table above). **`--auto`** is still an all-random spectator game for stress/replay.
 
 #### Story 3.3 — Game audit log (UI)
@@ -362,7 +362,7 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 
 ### EPIC 4 — Monte Carlo AI
 
-**Goal:** Introduce **probabilistic** move choice that never treats the **true** opponent hand as visible. Bridge from Epic 3: the old greedy scorer read hole cards on the live `GameState` (clairvoyant); production bot is random until this epic ships.
+**Goal:** Introduce **probabilistic** move choice that never treats the **true** opponent hand as visible. Bridge from Epic 3: the old greedy scorer was clairvoyant; production now uses determinization + Monte Carlo (Stories 4.1–4.2 implemented below).
 
 **Design rule:** Any **full** `GameState` used for search or rollouts must come from **`generateDeterminizedState`** (or equivalent)—a sampled completion of unknown cards—not from reading the opponent’s actual deal in the running game record.
 
@@ -377,6 +377,8 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 
 **Deliverable:** `generateDeterminizedState(partialState, rng)` (or `(state, viewer, rng)`), reproducible from RNG seed, covered by Vitest.
 
+**Implementation:** [`src/ai/determinization.ts`](src/ai/determinization.ts) — `generateDeterminizedState(state, viewer, rng)`. Tests: [`tests/ai/determinization.test.ts`](tests/ai/determinization.test.ts).
+
 #### Story 4.2 — Monte Carlo move choice
 
 **Objective:** Pick moves by **simulated** win rate on **determinized** worlds, not by scoring the live state with hidden cards.
@@ -385,11 +387,15 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 
 - From the **real** observation, for each **legal** move: apply the move on a determinized clone (or apply then determinize per your pipeline doc).
 - For each of **K** determinizations (or a total sample budget): run **N** random rollouts to terminal (reuse / extend [`runFromState`](src/engine/simulator.ts)); record win/loss for the **viewer**.
-- Average score across samples; choose the move with best **mean** estimate. Document whether “100+ simulations per move” means per determinization or **total** budget across K worlds.
+- Average score across samples; choose the move with best **mean** estimate.
 
 **Note:** Using the existing `evaluateState` / `chooseGreedyMove` **inside** a determinized hypothetical is allowed (full information **in that sample**). Production must **never** call them on the **true** `GameState` for bot play.
 
 **Deliverable:** Monte Carlo bot wired to CLI and/or UI (replace random bot path from Epic 3 bridge).
+
+**Implementation:** [`src/ai/monteCarlo.ts`](src/ai/monteCarlo.ts) — `chooseMonteCarloMove`, `resolveMoveForDeterminized`, `DEFAULT_MONTE_CARLO_CONFIG` (`K`×`N` rollouts **per legal candidate move**; default **8×16 = 128**). Win rate = wins / (K×N); rollouts with no terminal winner count as losses. Wired in [`advanceSession`](src/state/advanceSession.ts) and [`src/cli/play.ts`](src/cli/play.ts). Tests: [`tests/ai/monteCarlo.test.ts`](tests/ai/monteCarlo.test.ts).
+
+**Simulation budget:** “100+ sims per move” is interpreted as **K×N ≥ 100** per candidate (default 128). Story 4.3 may raise K/N or move work off-thread.
 
 #### Story 4.3 — Worker and UI integration (optional split)
 
@@ -516,9 +522,9 @@ Each phase is done when its **Definition of Done** is met.
 
 ### Phase 2
 
-- Epic 3 bot + audit UI (random-move bot until Epic 4; greedy code retained for tests)
+- Epic 3 bot + audit UI (MC bot + determinization; greedy code retained for tests only)
 
-**Definition of Done:** Player can play vs bot; bot chooses random legal moves and game completes (until Epic 4 MC).
+**Definition of Done:** Player can play vs bot; bot uses determinization + Monte Carlo and games complete.
 
 ### Phase 3
 

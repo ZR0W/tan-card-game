@@ -13,7 +13,10 @@ import {
 } from "../engine";
 import type { GameState } from "../engine/gameState";
 import type { Move } from "../engine/rules";
-import { createBotPlayRng } from "../state/advanceSession";
+import {
+  chooseMonteCarloMove,
+  DEFAULT_MONTE_CARLO_CONFIG,
+} from "../ai/monteCarlo";
 import { parsePlayArgs, playCliHelpText } from "./args";
 import { describeMove, formatGameState } from "./format";
 
@@ -65,8 +68,7 @@ async function runInteractive(
   botMode: boolean
 ): Promise<void> {
   let state = createInitialGameState(seed);
-  /** Random legal moves for P1 until Epic 4 (same RNG offset as web `advanceSession`). */
-  const botRng = createBotPlayRng(seed);
+  let mcWorkSalt = 0;
   const rl = readline.createInterface({ input, output });
 
   try {
@@ -80,7 +82,13 @@ async function runInteractive(
 
       let move: Move;
       if (shouldBotAct(state, botMode)) {
-        move = pickBotMove(moves, botRng);
+        move =
+          chooseMonteCarloMove(
+            state,
+            1,
+            DEFAULT_MONTE_CARLO_CONFIG,
+            ++mcWorkSalt
+          ) ?? moves[0]!;
         const who =
           state.phase === "draw" ? "Auto" : "Bot (P1)";
         console.log(`${who}: ${describeMove(move, state)}`);

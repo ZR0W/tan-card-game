@@ -4,7 +4,7 @@
 
 export interface PlayCliArgs {
   seed: number;
-  /** Human (P0) vs random-legal bot (P1); seeded until Epic 4 MC replaces it. */
+  /** Human (P0) vs Monte Carlo bot (P1). */
   bot: boolean;
   /** Print each step of a fully random game (spectator). */
   auto: boolean;
@@ -47,7 +47,7 @@ Usage:
   npm run play -- --auto [seed]
 
 Options:
-  --bot, --vs-bot   You are player 0; player 1 plays random legal moves (seeded).
+  --bot, --vs-bot   You are player 0; player 1 uses Monte Carlo (determinization + rollouts).
   --auto, --simulate   Print a full random game (no input).
   -h, --help        Show this help.
 

@@ -1,16 +1,11 @@
-import {
-  applyMove,
-  createRng,
-  getLegalMoves,
-  getWinner,
-} from "@engine/index";
-import type { Rng } from "@engine/rng";
+import { applyMove, getWinner } from "@engine/index";
 import type { Move } from "@engine/rules";
 import type { GameState } from "@engine/gameState";
+import {
+  chooseMonteCarloMove,
+  DEFAULT_MONTE_CARLO_CONFIG,
+} from "../ai/monteCarlo";
 import { buildLogEvents } from "../ui/gameLog";
-
-/** Offset from deal seed for bot RNG so UI sessions stay reproducible for a given seed. */
-export const BOT_PLAY_RNG_OFFSET = 77_007;
 
 export function shouldBotAct(state: GameState, vsBot: boolean): boolean {
   if (!vsBot) return false;
@@ -20,22 +15,20 @@ export function shouldBotAct(state: GameState, vsBot: boolean): boolean {
   return false;
 }
 
-/** Random legal move (production bot path until Epic 4 MC). */
-export function pickRandomLegalMove(state: GameState, rng: Rng): Move | null {
-  const moves = getLegalMoves(state);
-  if (moves.length === 0) return null;
-  return moves[rng.nextInt(0, moves.length - 1)]!;
-}
+/** Context for Monte Carlo bot (Epic 4.2): monotonic `nextMcWorkSalt` per bot decision. */
+export type AdvanceSessionContext = {
+  nextMcWorkSalt: () => number;
+};
 
 /**
  * Applies `move` then any chained bot moves; collects `buildLogEvents` for each atomic transition.
- * Bot moves use `pickRandomLegalMove` (not greedy heuristic — see README Epic 3 / 4 bridge).
+ * Bot uses Monte Carlo on determinized worlds (Epic 4).
  */
 export function advanceSession(
   prev: GameState,
   move: Move,
   vsBot: boolean,
-  botRng: Rng
+  ctx: AdvanceSessionContext
 ): { next: GameState; events: string[] } {
   const events: string[] = [];
   let next = applyMove(prev, move);
@@ -46,7 +39,12 @@ export function advanceSession(
     getWinner(next) === null &&
     shouldBotAct(next, vsBot)
   ) {
-    const bm = pickRandomLegalMove(next, botRng);
+    const bm = chooseMonteCarloMove(
+      next,
+      1,
+      DEFAULT_MONTE_CARLO_CONFIG,
+      ctx.nextMcWorkSalt()
+    );
     if (!bm) break;
     const before = next;
     next = applyMove(next, bm);
@@ -54,9 +52,4 @@ export function advanceSession(
   }
 
   return { next, events };
-}
-
-/** Fresh RNG stream for bot moves after a new deal (same `seed` as `createInitialGameState`). */
-export function createBotPlayRng(seed: number): Rng {
-  return createRng(seed + BOT_PLAY_RNG_OFFSET);
 }

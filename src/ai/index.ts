@@ -6,3 +6,10 @@ export type { EvalMetrics } from "./metrics";
 export { evaluateMetrics } from "./metrics";
 export { METRIC_WEIGHTS, combineMetrics, evaluateState } from "./evaluation";
 export { chooseGreedyMove } from "./heuristicBot";
+export { generateDeterminizedState } from "./determinization";
+export {
+  chooseMonteCarloMove,
+  DEFAULT_MONTE_CARLO_CONFIG,
+  resolveMoveForDeterminized,
+} from "./monteCarlo";
+export type { MonteCarloConfig } from "./monteCarlo";
