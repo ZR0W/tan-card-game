@@ -22,7 +22,8 @@ export const DEFAULT_MONTE_CARLO_CONFIG: MonteCarloConfig = {
   N: 16,
 };
 
-function moveSortKey(m: Move): string {
+/** Stable string key for a move (matches sort / tie-break order). */
+export function moveSortKey(m: Move): string {
   switch (m.type) {
     case "attack":
       return `attack:${m.cardIndex}`;
@@ -85,6 +86,33 @@ function rolloutRngSeed(workSalt: number, moveIdx: number, k: number, n: number)
   return (detRngSeed(workSalt, moveIdx, k) + n * 524_287 + 1) >>> 0;
 }
 
+/** Per-candidate rollout stats for one `chooseMonteCarloMove` call. */
+export interface MonteCarloCandidateStats {
+  moveKey: string;
+  wins: number;
+  rolloutsDone: number;
+  mean: number;
+  /** Count of determinization indices `k` where resolve failed or `applyMove` threw (no rollouts added). */
+  skippedDeterminizations: number;
+}
+
+/** JSON-friendly snapshot emitted once per successful MC decision (optional `onDecision`). */
+export interface MonteCarloDecisionRecord {
+  viewer: PlayerId;
+  workSalt: number;
+  config: MonteCarloConfig;
+  phase: GameState["phase"];
+  currentAttacker: PlayerId;
+  currentDefender: PlayerId;
+  candidates: MonteCarloCandidateStats[];
+  chosen: Move;
+  chosenMean: number;
+}
+
+export interface MonteCarloChooseOptions {
+  onDecision?: (record: MonteCarloDecisionRecord) => void;
+}
+
 /**
  * Monte Carlo move choice: for each legal move, average win rate for `viewer` over K
  * determinized worlds × N random rollouts each. Never scores the live hidden deal; each
@@ -96,12 +124,14 @@ export function chooseMonteCarloMove(
   state: GameState,
   viewer: PlayerId,
   config: MonteCarloConfig,
-  workSalt: number
+  workSalt: number,
+  options?: MonteCarloChooseOptions
 ): Move | null {
   if (getWinner(state) !== null) return null;
   const moves = [...getLegalMoves(state)].sort(compareMoves);
   if (moves.length === 0) return null;
 
+  const candidates: MonteCarloCandidateStats[] = [];
   let best: Move = moves[0]!;
   let bestMean = -1;
 
@@ -109,6 +139,7 @@ export function chooseMonteCarloMove(
     const move = moves[mi]!;
     let wins = 0;
     let rolloutsDone = 0;
+    let skippedDeterminizations = 0;
 
     for (let k = 0; k < config.K; k++) {
       const det = generateDeterminizedState(
@@ -117,11 +148,15 @@ export function chooseMonteCarloMove(
         createRng(detRngSeed(workSalt, mi, k))
       );
       const resolved = resolveMoveForDeterminized(move, state, det);
-      if (resolved === null) continue;
+      if (resolved === null) {
+        skippedDeterminizations += 1;
+        continue;
+      }
       let afterCandidate: GameState;
       try {
         afterCandidate = applyMove(cloneGameState(det), resolved);
       } catch {
+        skippedDeterminizations += 1;
         continue;
       }
       for (let n = 0; n < config.N; n++) {
@@ -136,10 +171,31 @@ export function chooseMonteCarloMove(
     }
 
     const mean = rolloutsDone > 0 ? wins / rolloutsDone : 0;
+    candidates.push({
+      moveKey: moveSortKey(move),
+      wins,
+      rolloutsDone,
+      mean,
+      skippedDeterminizations,
+    });
     if (mean > bestMean) {
       bestMean = mean;
       best = move;
     }
+  }
+
+  if (options?.onDecision) {
+    options.onDecision({
+      viewer,
+      workSalt,
+      config: { K: config.K, N: config.N },
+      phase: state.phase,
+      currentAttacker: state.currentAttacker,
+      currentDefender: state.currentDefender,
+      candidates,
+      chosen: best,
+      chosenMean: bestMean,
+    });
   }
 
   return best;

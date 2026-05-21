@@ -5,6 +5,7 @@ import {
   chooseMonteCarloMove,
   DEFAULT_MONTE_CARLO_CONFIG,
 } from "../ai/monteCarlo";
+import type { MonteCarloChooseOptions } from "../ai/monteCarlo";
 import { buildLogEvents } from "../ui/gameLog";
 
 export function shouldBotAct(state: GameState, vsBot: boolean): boolean {
@@ -15,9 +16,11 @@ export function shouldBotAct(state: GameState, vsBot: boolean): boolean {
   return false;
 }
 
-/** Context for Monte Carlo bot (Epic 4.2): monotonic `nextMcWorkSalt` per bot decision. */
+/** Context for Monte Carlo bot (Epic 4.2+): monotonic `nextMcWorkSalt` per bot decision; optional Story 4.3 debug sink. */
 export type AdvanceSessionContext = {
   nextMcWorkSalt: () => number;
+  /** When set, each bot MC choice emits one structured record (dev / audit). */
+  monteCarloOptions?: Pick<MonteCarloChooseOptions, "onDecision">;
 };
 
 /**
@@ -43,7 +46,8 @@ export function advanceSession(
       next,
       1,
       DEFAULT_MONTE_CARLO_CONFIG,
-      ctx.nextMcWorkSalt()
+      ctx.nextMcWorkSalt(),
+      ctx.monteCarloOptions
     );
     if (!bm) break;
     const before = next;

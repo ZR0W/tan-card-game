@@ -51,6 +51,9 @@ Options:
   --auto, --simulate   Print a full random game (no input).
   -h, --help        Show this help.
 
+Environment (optional):
+  TAN_MC_DEBUG=1 or MC_DEBUG=1   With --bot, log each MC decision as JSON (console.debug).
+
 Seed:
   Optional integer; default is ${DEFAULT_SEED} if omitted.
 `;

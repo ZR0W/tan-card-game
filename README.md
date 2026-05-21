@@ -362,7 +362,7 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 
 ### EPIC 4 — Monte Carlo AI
 
-**Goal:** Introduce **probabilistic** move choice that never treats the **true** opponent hand as visible. Bridge from Epic 3: the old greedy scorer was clairvoyant; production now uses determinization + Monte Carlo (Stories 4.1–4.2 implemented below).
+**Goal:** Introduce **probabilistic** move choice that never treats the **true** opponent hand as visible. Bridge from Epic 3: the old greedy scorer was clairvoyant; production now uses determinization + Monte Carlo (Stories 4.1–4.2 implemented below; Story 4.3 adds optional structured MC logging).
 
 **Design rule:** Any **full** `GameState` used for search or rollouts must come from **`generateDeterminizedState`** (or equivalent)—a sampled completion of unknown cards—not from reading the opponent’s actual deal in the running game record.
 
@@ -395,9 +395,15 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 
 **Implementation:** [`src/ai/monteCarlo.ts`](src/ai/monteCarlo.ts) — `chooseMonteCarloMove`, `resolveMoveForDeterminized`, `DEFAULT_MONTE_CARLO_CONFIG` (`K`×`N` rollouts **per legal candidate move**; default **8×16 = 128**). Win rate = wins / (K×N); rollouts with no terminal winner count as losses. Wired in [`advanceSession`](src/state/advanceSession.ts) and [`src/cli/play.ts`](src/cli/play.ts). Tests: [`tests/ai/monteCarlo.test.ts`](tests/ai/monteCarlo.test.ts).
 
-**Simulation budget:** “100+ sims per move” is interpreted as **K×N ≥ 100** per candidate (default 128). Story 4.3 may raise K/N or move work off-thread.
+**Simulation budget:** “100+ sims per move” is interpreted as **K×N ≥ 100** per candidate (default 128). Story 4.4 may raise K/N or move work off-thread.
 
-#### Story 4.3 — Worker and UI integration (optional split)
+#### Story 4.3 — Monte Carlo structured debug logging
+
+**Objective:** After each bot MC decision, optionally emit one **JSON-serializable** record (per-candidate win counts, rollouts, skipped determinizations, chosen move and mean) for auditing and tests—without a second UI panel.
+
+**Implementation:** [`chooseMonteCarloMove`](src/ai/monteCarlo.ts) accepts optional `{ onDecision }`. [`AdvanceSessionContext`](src/state/advanceSession.ts) threads `monteCarloOptions` from the UI when debug is on. Toggle **web:** `VITE_MC_DEBUG=true` in env **or** `localStorage.setItem("tan:mcDebug", "1")` (see [`src/state/mcDebug.ts`](src/state/mcDebug.ts)). Toggle **CLI `--bot`:** `TAN_MC_DEBUG=1` or `MC_DEBUG=1`. Logs use `console.debug("[MC]", JSON.stringify(record))`.
+
+#### Story 4.4 — Worker and UI integration (optional split)
 
 **Objective:** Keep the main thread responsive under high simulation counts.
 

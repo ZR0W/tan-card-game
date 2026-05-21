@@ -63,12 +63,18 @@ async function promptMove(
   }
 }
 
+function mcDebugFromEnv(): boolean {
+  const v = process.env.TAN_MC_DEBUG ?? process.env.MC_DEBUG;
+  return v === "1" || v === "true";
+}
+
 async function runInteractive(
   seed: number,
   botMode: boolean
 ): Promise<void> {
   let state = createInitialGameState(seed);
   let mcWorkSalt = 0;
+  const mcDebug = mcDebugFromEnv();
   const rl = readline.createInterface({ input, output });
 
   try {
@@ -87,7 +93,14 @@ async function runInteractive(
             state,
             1,
             DEFAULT_MONTE_CARLO_CONFIG,
-            ++mcWorkSalt
+            ++mcWorkSalt,
+            mcDebug
+              ? {
+                  onDecision: (r) => {
+                    console.debug("[MC]", JSON.stringify(r));
+                  },
+                }
+              : undefined
           ) ?? moves[0]!;
         const who =
           state.phase === "draw" ? "Auto" : "Bot (P1)";

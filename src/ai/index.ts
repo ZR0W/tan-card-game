@@ -10,6 +10,12 @@ export { generateDeterminizedState } from "./determinization";
 export {
   chooseMonteCarloMove,
   DEFAULT_MONTE_CARLO_CONFIG,
+  moveSortKey,
   resolveMoveForDeterminized,
 } from "./monteCarlo";
-export type { MonteCarloConfig } from "./monteCarlo";
+export type {
+  MonteCarloCandidateStats,
+  MonteCarloChooseOptions,
+  MonteCarloConfig,
+  MonteCarloDecisionRecord,
+} from "./monteCarlo";

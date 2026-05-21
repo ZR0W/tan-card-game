@@ -6,6 +6,7 @@ import {
 import type { Move } from "@engine/rules";
 import type { GameState } from "@engine/gameState";
 import { advanceSession } from "./advanceSession";
+import { isMcDebugEnabled } from "./mcDebug";
 import { initialDealLines } from "../ui/gameLog";
 
 type SessionModel = {
@@ -73,11 +74,19 @@ export function useGameSession(initialSeed: number, vsBot = false) {
     (move: Move) => {
       try {
         setMoveError(null);
+        const mcDebug = vsBot && isMcDebugEnabled();
         const { next, events } = advanceSession(session.game, move, vsBot, {
           nextMcWorkSalt: () => {
             mcWorkSalt.current += 1;
             return mcWorkSalt.current;
           },
+          monteCarloOptions: mcDebug
+            ? {
+                onDecision: (r) => {
+                  console.debug("[MC]", JSON.stringify(r));
+                },
+              }
+            : undefined,
         });
         dispatch({ type: "moveOk", game: next, appended: events });
       } catch (e) {

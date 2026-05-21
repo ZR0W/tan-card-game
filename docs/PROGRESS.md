@@ -58,7 +58,10 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 - [x] **Story 4.2** — Monte Carlo Move Evaluation  
   Completed: 2026-04-27 | Notes: `chooseMonteCarloMove`, `resolveMoveForDeterminized` in `src/ai/monteCarlo.ts`; `advanceSession` + CLI `--bot`; `tests/ai/monteCarlo.test.ts`.
 
-- [ ] **Story 4.3** — Worker + UI integration for MC  
+- [x] **Story 4.3** — Monte Carlo structured debug logging  
+  Completed: 2026-04-27 | Notes: `MonteCarloDecisionRecord`, `onDecision` in `monteCarlo.ts`; `AdvanceSessionContext.monteCarloOptions`; `mcDebug.ts` + env `TAN_MC_DEBUG`/`MC_DEBUG`; tests in `monteCarlo.test.ts`.
+
+- [ ] **Story 4.4** — Worker + UI integration for MC  
   Completed: _ | Notes: Optional split; see README Epic 4.
 
 ---
