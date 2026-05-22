@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useGameSession } from "../state/useGameSession";
+import type { BotBrain } from "../ai/botBrain";
+import { BOT_BRAIN_LABELS, BOT_BRAIN_OPTIONS } from "../ai/botBrain";
 import type { PlayerId } from "@engine/gameState";
 import { getWinner } from "@engine/index";
 import { GameAuditPanel } from "./components/GameAuditPanel";
@@ -12,9 +14,9 @@ import { getActingPlayerId, TurnIndicator } from "./components/TurnIndicator";
 const DEFAULT_SEED = 12345;
 
 export function App() {
-  const [vsBot, setVsBot] = useState(false);
+  const [botBrain, setBotBrain] = useState<BotBrain | null>(null);
   const { seed, setSeed, state, gameLog, dispatchMove, resetDeal, moveError } =
-    useGameSession(DEFAULT_SEED, vsBot);
+    useGameSession(DEFAULT_SEED, botBrain);
 
   const localPlayer: PlayerId = 0;
   const p1: PlayerId = 1;
@@ -26,6 +28,10 @@ export function App() {
     !gameEnded && acting !== "draw" && acting !== null && acting === localPlayer;
   const p1Acting =
     !gameEnded && acting !== "draw" && acting !== null && acting === p1;
+
+  const p1Label = botBrain
+    ? `Player 1 (${BOT_BRAIN_LABELS[botBrain]})`
+    : "Player 1 (hot-seat)";
 
   return (
     <div className="app">
@@ -40,14 +46,31 @@ export function App() {
           onChange={(e) => setSeed(Number(e.target.value) || 0)}
         />
         <span className="app__dev-hint">Changing seed starts a new deal.</span>
+
         <label className="app__vs-bot">
           <input
             type="checkbox"
-            checked={vsBot}
-            onChange={(e) => setVsBot(e.target.checked)}
+            checked={botBrain !== null}
+            onChange={(e) => setBotBrain(e.target.checked ? "greedy" : null)}
           />{" "}
-          Play vs bot (Player 1 uses heuristic AI)
+          Play vs bot
         </label>
+
+        {botBrain !== null && (
+          <label className="app__brain-select">
+            Brain:{" "}
+            <select
+              value={botBrain}
+              onChange={(e) => setBotBrain(e.target.value as BotBrain)}
+            >
+              {BOT_BRAIN_OPTIONS.map((b) => (
+                <option key={b} value={b}>
+                  {BOT_BRAIN_LABELS[b]}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       <div className="app-layout">
@@ -58,7 +81,7 @@ export function App() {
 
           <PlayerHand
             player={state.players[p1]}
-            label={vsBot ? "Player 1 (heuristic bot)" : "Player 1 (hot-seat)"}
+            label={p1Label}
             isLocal={false}
             isActing={p1Acting}
           />
@@ -80,9 +103,9 @@ export function App() {
           />
 
           <p className="app__hint">
-            {vsBot
-              ? "You are Player 0 (bottom). Player 1 is the heuristic bot and moves automatically after your turns."
-              : 'Two-player hot-seat: take turns using the move buttons. Player 0 is you at the bottom; Player 1 sits at the top.'}
+            {botBrain
+              ? `You are Player 0 (bottom). Player 1 is the ${BOT_BRAIN_LABELS[botBrain]} and moves automatically after your turns.`
+              : "Two-player hot-seat: take turns using the move buttons. Player 0 is you at the bottom; Player 1 sits at the top."}
           </p>
         </div>
 

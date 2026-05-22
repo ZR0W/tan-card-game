@@ -4,7 +4,8 @@ import {
 } from "@engine/index";
 import type { Move } from "@engine/rules";
 import type { GameState } from "@engine/gameState";
-import { chooseGreedyMove } from "../ai/heuristicBot";
+import type { BotBrain } from "../ai/botBrain";
+import { pickBotMove } from "../ai/botBrain";
 import { buildLogEvents } from "../ui/gameLog";
 
 export function shouldBotAct(state: GameState, vsBot: boolean): boolean {
@@ -16,23 +17,25 @@ export function shouldBotAct(state: GameState, vsBot: boolean): boolean {
 }
 
 /**
- * Applies `move` then any chained bot moves; collects `buildLogEvents` for each atomic transition.
+ * Applies `move` then chains any bot moves, collecting log events for each.
+ *
+ * `botBrain` — which AI to use for Player 1; `null` = human vs human (no bot).
  */
 export function advanceSession(
   prev: GameState,
   move: Move,
-  vsBot: boolean
+  botBrain: BotBrain | null
 ): { next: GameState; events: string[] } {
   const events: string[] = [];
   let next = applyMove(prev, move);
   events.push(...buildLogEvents(prev, move, next));
 
   while (
-    vsBot &&
+    botBrain !== null &&
     getWinner(next) === null &&
-    shouldBotAct(next, vsBot)
+    shouldBotAct(next, true)
   ) {
-    const bm = chooseGreedyMove(next, 1);
+    const bm = pickBotMove(next, 1, botBrain);
     if (!bm) break;
     const before = next;
     next = applyMove(next, bm);

@@ -396,6 +396,26 @@ Use the same seedable RNG as the engine. The unknown set is exactly "deck minus 
 
 **Deliverable:** Monte Carlo bot (100+ simulations per move).
 
+#### Story 4.3 — Bot Brain Toggle & Benchmark
+
+**Objective:** Validate that MCTS improves on the greedy baseline.
+
+**Tasks:**
+
+- Define `BotBrain` type (`"greedy" | "mcts-fast" | "mcts"`) as a shared AI-selector
+- Wire `pickBotMove` dispatcher so UI and CLI share one code path
+- Add brain-selector dropdown to the web UI (visible when vs-bot mode is on)
+- Add `npm run benchmark` CLI: head-to-head N-game series with win rates and CI95 bands
+
+**Deliverable:** `npm run benchmark -- --p0 greedy --p1 mcts-fast` prints a win-rate comparison table with confidence intervals. Non-overlapping CI95 bands indicate statistical significance (p < 0.05).
+
+```
+npm run benchmark                                 # greedy vs mcts-fast, 20 games
+npm run benchmark -- --p0 greedy --p1 mcts        # greedy vs full MCTS
+npm run benchmark -- --games 100 --sims 25        # tighter confidence intervals
+npm run benchmark -- --quiet                      # suppress per-game lines
+```
+
 ---
 
 ### EPIC 5 — Performance Optimization

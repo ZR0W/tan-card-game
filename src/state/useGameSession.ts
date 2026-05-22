@@ -5,6 +5,7 @@ import {
 } from "@engine/index";
 import type { Move } from "@engine/rules";
 import type { GameState } from "@engine/gameState";
+import type { BotBrain } from "../ai/botBrain";
 import { advanceSession } from "./advanceSession";
 import { initialDealLines } from "../ui/gameLog";
 
@@ -41,18 +42,22 @@ function initSession(seed: number): SessionModel {
   return { game, log: initialDealLines(seed, game) };
 }
 
-export function useGameSession(initialSeed: number, vsBot = false) {
+/**
+ * @param botBrain — `null` for human vs human; a `BotBrain` string to enable
+ *   the AI for Player 1.  Changing this value resets the deal.
+ */
+export function useGameSession(initialSeed: number, botBrain: BotBrain | null = null) {
   const [seed, setSeedState] = useState(initialSeed);
   const [session, dispatch] = useReducer(sessionReducer, initialSeed, initSession);
   const [moveError, setMoveError] = useState<string | null>(null);
 
-  const prevVsBot = useRef(vsBot);
+  const prevBotBrain = useRef(botBrain);
   useEffect(() => {
-    if (prevVsBot.current === vsBot) return;
-    prevVsBot.current = vsBot;
+    if (prevBotBrain.current === botBrain) return;
+    prevBotBrain.current = botBrain;
     dispatch({ type: "reset", seed });
     setMoveError(null);
-  }, [vsBot, seed]);
+  }, [botBrain, seed]);
 
   const setSeed = useCallback((next: number) => {
     setSeedState(next);
@@ -69,7 +74,7 @@ export function useGameSession(initialSeed: number, vsBot = false) {
     (move: Move) => {
       try {
         setMoveError(null);
-        const { next, events } = advanceSession(session.game, move, vsBot);
+        const { next, events } = advanceSession(session.game, move, botBrain);
         dispatch({ type: "moveOk", game: next, appended: events });
       } catch (e) {
         if (e instanceof IllegalMoveError) {
@@ -79,7 +84,7 @@ export function useGameSession(initialSeed: number, vsBot = false) {
         throw e;
       }
     },
-    [session.game, vsBot]
+    [session.game, botBrain]
   );
 
   return {
