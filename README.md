@@ -402,19 +402,45 @@ Use the same seedable RNG as the engine. The unknown set is exactly "deck minus 
 
 **Tasks:**
 
-- Define `BotBrain` type (`"greedy" | "mcts-fast" | "mcts"`) as a shared AI-selector
+- Define `BotBrain` type (`"random" | "greedy" | "mcts-fast" | "mcts"`) as a shared AI-selector
 - Wire `pickBotMove` dispatcher so UI and CLI share one code path
 - Add brain-selector dropdown to the web UI (visible when vs-bot mode is on)
 - Add `npm run benchmark` CLI: head-to-head N-game series with win rates and CI95 bands
 
-**Deliverable:** `npm run benchmark -- --p0 greedy --p1 mcts-fast` prints a win-rate comparison table with confidence intervals. Non-overlapping CI95 bands indicate statistical significance (p < 0.05).
+**Benchmark flags** — always specify `--p0` and `--p1` so the command is self-documenting:
 
 ```
-npm run benchmark                                 # greedy vs mcts-fast, 20 games
-npm run benchmark -- --p0 greedy --p1 mcts        # greedy vs full MCTS
-npm run benchmark -- --games 100 --sims 25        # tighter confidence intervals
-npm run benchmark -- --quiet                      # suppress per-game lines
+# Both sides must be named explicitly. --sims only applies to MCTS brains.
+npm run benchmark -- --p0 greedy    --p1 random                           # sanity: greedy beats random?
+npm run benchmark -- --p0 random    --p1 mcts-fast   --sims 25            # sanity: mcts beats random?
+npm run benchmark -- --p0 greedy    --p1 mcts-fast   --sims 25            # main: mcts vs greedy
+npm run benchmark -- --p0 greedy    --p1 mcts        --games 100 --sims 50 --quiet
+npm run benchmark -- --p0 mcts-fast --p1 mcts        --sims 25
 ```
+
+Available brains: `random` | `greedy` | `mcts-fast` | `mcts`
+
+#### Story 4.4 — Random Brain & Diagnostic Ladder
+
+**Objective:** Isolate whether MCTS or the greedy baseline is the broken component.
+
+A `"random"` brain picks uniformly at random from all legal moves (any attack, defend,
+give_up, pass_attack) using the seedable RNG. It is the simplest possible baseline and
+should lose to both greedy and MCTS if those implementations are correct.
+
+**Diagnostic ladder — run these in order:**
+
+| Step | Command | Expected outcome |
+|------|---------|-----------------|
+| 1 | `--p0 greedy --p1 random` | P0 (greedy) wins clearly — validates greedy |
+| 2 | `--p0 random --p1 mcts-fast --sims 25` | P1 (MCTS) wins clearly — validates MCTS baseline |
+| 3 | `--p0 greedy --p1 mcts-fast --sims 25` | P1 (MCTS) wins — validates MCTS improvement |
+
+If step 1 passes but step 2 fails, MCTS is the broken component. If step 1 fails,
+something is wrong with the greedy evaluation or the engine.
+
+**Deliverable:** `"random"` added to `BotBrain`; all three ladder commands runnable via
+`npm run benchmark`.
 
 ---
 

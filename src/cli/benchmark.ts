@@ -1,19 +1,38 @@
 /**
- * Head-to-head bot benchmark: run N complete games between two AI brains
- * and report win rates with Wilson 95% CI to quantify improvement.
+ * Head-to-head bot benchmark.
  *
- * Usage:
- *   npm run benchmark
- *   npm run benchmark -- --p0 greedy --p1 mcts-fast
- *   npm run benchmark -- --p0 greedy --p1 mcts --games 50 --sims 20
- *   npm run benchmark -- --p0 mcts-fast --p1 mcts --games 100 --quiet
- *   npm run benchmark -- --seed 42
+ * Runs N complete games between two AI brains and reports win rates with
+ * Wilson 95% confidence intervals so you can judge whether one brain is
+ * genuinely better or just got lucky.
  *
- * Defaults: --p0 greedy  --p1 mcts-fast  --games 20  --sims 10  --seed 0
+ * Usage — always name both sides explicitly:
+ *
+ *   npm run benchmark -- --p0 greedy    --p1 random                      # sanity check: greedy should beat random
+ *   npm run benchmark -- --p0 random    --p1 mcts-fast                   # sanity check: mcts should beat random
+ *   npm run benchmark -- --p0 greedy    --p1 mcts-fast  --sims 25        # main validation
+ *   npm run benchmark -- --p0 greedy    --p1 mcts        --sims 50       # stronger MCTS
+ *   npm run benchmark -- --p0 mcts-fast --p1 mcts        --sims 25       # fast vs full MCTS
+ *   npm run benchmark -- --p0 greedy    --p1 mcts        --games 100 --sims 25 --quiet
+ *
+ * Flags:
+ *   --p0 <brain>   Brain for Player 0 (default: greedy)
+ *   --p1 <brain>   Brain for Player 1 (default: mcts-fast)
+ *   --games  N     Number of complete games to play (default: 20)
+ *   --sims   N     Simulations per move for MCTS brains (default: 10)
+ *   --seed   N     Base seed for game deals (default: 0)
+ *   --quiet        Show a progress bar instead of per-game lines
+ *
+ * Available brains: random | greedy | mcts-fast | mcts
+ *
+ * Diagnostic ladder — run these in order to isolate a broken brain:
+ *   1. greedy vs random    → greedy should win clearly  (validates greedy)
+ *   2. mcts   vs random    → mcts   should win clearly  (validates mcts baseline)
+ *   3. mcts   vs greedy    → mcts   should win          (validates mcts improvement)
+ *   If step 1 passes but step 2 fails, MCTS is likely the broken component.
  *
  * Statistical note:
- *   Non-overlapping CI95 bands ≈ p < 0.05.  With 20 games the bands are
- *   wide (~±20 pp); use --games 100+ for publishable conclusions.
+ *   Non-overlapping CI95 bands ≈ p < 0.05.
+ *   With 20 games the bands span ~±20 pp — use --games 100+ for firm conclusions.
  */
 
 import {
@@ -24,9 +43,15 @@ import {
 } from "../engine";
 import type { PlayerId } from "../engine";
 import type { BotBrain } from "../ai/botBrain";
-import { BOT_BRAIN_LABELS, BOT_BRAIN_OPTIONS, BOT_BRAIN_SIMS, pickBotMove } from "../ai/botBrain";
+import {
+  BOT_BRAIN_LABELS,
+  BOT_BRAIN_OPTIONS,
+  BOT_BRAIN_SIMS,
+  isMctsBrain,
+  pickBotMove,
+} from "../ai/botBrain";
 
-// ── Arg parsing ──────────────────────────────────────────────────────────────
+// ── Arg parsing ───────────────────────────────────────────────────────────────
 
 function opt(name: string, fallback: string): string {
   const i = process.argv.indexOf(name);
@@ -35,20 +60,27 @@ function opt(name: string, fallback: string): string {
 function flag(name: string): boolean {
   return process.argv.includes(name);
 }
-function asBrain(raw: string, which: string): BotBrain {
-  if (BOT_BRAIN_OPTIONS.includes(raw as BotBrain)) return raw as BotBrain;
-  console.error(`Unknown brain "${raw}" for ${which}. Options: ${BOT_BRAIN_OPTIONS.join(", ")}`);
+function asBrain(raw: string, flag: string): BotBrain {
+  if ((BOT_BRAIN_OPTIONS as readonly string[]).includes(raw)) return raw as BotBrain;
+  console.error(
+    `Unknown brain "${raw}" for ${flag}.\n` +
+    `Available: ${BOT_BRAIN_OPTIONS.join(" | ")}`
+  );
   process.exit(1);
 }
 
-const P0_BRAIN = asBrain(opt("--p0", "greedy"), "--p0");
-const P1_BRAIN = asBrain(opt("--p1", "mcts-fast"), "--p1");
-const GAMES     = Math.max(1, parseInt(opt("--games", "20"), 10));
-const SIMS      = Math.max(1, parseInt(opt("--sims", "10"), 10));
+const P0_BRAIN  = asBrain(opt("--p0",    "greedy"),    "--p0");
+const P1_BRAIN  = asBrain(opt("--p1",    "mcts-fast"), "--p1");
+const GAMES     = Math.max(1, parseInt(opt("--games",  "20"),  10));
+const SIMS      = Math.max(1, parseInt(opt("--sims",   "10"),  10));
 const BASE_SEED = parseInt(opt("--seed", "0"), 10);
 const QUIET     = flag("--quiet");
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// Apply --sims to MCTS brains. Has no effect when neither brain is MCTS.
+BOT_BRAIN_SIMS["mcts-fast"] = SIMS;
+BOT_BRAIN_SIMS["mcts"]      = SIMS;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function wilsonCI(wins: number, n: number): [number, number] {
   if (n === 0) return [0, 0];
@@ -64,9 +96,13 @@ function pct(n: number): string {
   return (n * 100).toFixed(1) + "%";
 }
 
+function simsNote(brain: BotBrain): string {
+  return isMctsBrain(brain) ? `  [--sims ${SIMS}]` : "";
+}
+
 /**
- * Plays one complete game between two AI brains.
- * Returns the winner (0 or 1).
+ * Plays one complete game between P0_BRAIN and P1_BRAIN.
+ * Returns the index of the winning player (0 or 1).
  */
 function playGame(gameSeed: number): PlayerId {
   let state = createInitialGameState(gameSeed);
@@ -76,7 +112,7 @@ function playGame(gameSeed: number): PlayerId {
     const moves = getLegalMoves(state);
     if (moves.length === 0) break;
 
-    // Draw is mandatory — no AI decision needed.
+    // Draw is mandatory — no AI decision.
     if (state.phase === "draw") {
       state = applyMove(state, { type: "draw" });
       turn++;
@@ -89,7 +125,7 @@ function playGame(gameSeed: number): PlayerId {
         : state.currentDefender;
 
     const brain = actor === 0 ? P0_BRAIN : P1_BRAIN;
-    // Derive a unique seed per (game, turn, player) for reproducible MCTS.
+    // Unique seed per (game × turn × player) keeps MCTS and random reproducible.
     const moveSeed = gameSeed * 100_000 + turn * 10 + actor;
 
     const move = pickBotMove(state, actor, brain, moveSeed);
@@ -98,8 +134,7 @@ function playGame(gameSeed: number): PlayerId {
     turn++;
 
     if (turn > 2_000) {
-      // Guard against infinite loops (should never happen with legal moves).
-      console.warn(`Game ${gameSeed} exceeded 2000 turns — aborting.`);
+      console.warn(`  Warning: game seed=${gameSeed} hit 2000-turn safety limit.`);
       break;
     }
   }
@@ -107,29 +142,26 @@ function playGame(gameSeed: number): PlayerId {
   return getWinner(state) ?? 0;
 }
 
-// ── Banner ───────────────────────────────────────────────────────────────────
+// ── Banner ────────────────────────────────────────────────────────────────────
 
-const W = 72;
+const W    = 72;
 const rule = "═".repeat(W);
-const thin  = "─".repeat(W);
-
-function brainDesc(brain: BotBrain): string {
-  const sims = BOT_BRAIN_SIMS[brain];
-  return sims !== undefined
-    ? `${BOT_BRAIN_LABELS[brain]} (${SIMS} sims/move overridden to match --sims)`
-    : BOT_BRAIN_LABELS[brain];
-}
+const thin = "─".repeat(W);
 
 console.log(rule);
-console.log(`Head-to-head benchmark`);
-console.log(`  P0: ${BOT_BRAIN_LABELS[P0_BRAIN]}   vs   P1: ${BOT_BRAIN_LABELS[P1_BRAIN]}`);
-console.log(`  ${GAMES} games · MCTS sims/move: ${SIMS} · base seed: ${BASE_SEED}`);
+console.log("Head-to-head benchmark");
+console.log(
+  `  P0  --p0 ${P0_BRAIN.padEnd(10)}  ${BOT_BRAIN_LABELS[P0_BRAIN]}${simsNote(P0_BRAIN)}`
+);
+console.log(
+  `  P1  --p1 ${P1_BRAIN.padEnd(10)}  ${BOT_BRAIN_LABELS[P1_BRAIN]}${simsNote(P1_BRAIN)}`
+);
+console.log(`  --games ${GAMES}  --seed ${BASE_SEED}`);
+if (!isMctsBrain(P0_BRAIN) && !isMctsBrain(P1_BRAIN)) {
+  console.log("  Note: --sims has no effect when neither brain is MCTS.");
+}
 console.log(rule);
 console.log();
-
-// Override the MCTS sim counts so --sims applies to both sides.
-BOT_BRAIN_SIMS["mcts-fast"] = SIMS;
-BOT_BRAIN_SIMS["mcts"]      = SIMS;
 
 // ── Run games ─────────────────────────────────────────────────────────────────
 
@@ -138,25 +170,23 @@ let p1Wins = 0;
 const startMs = Date.now();
 
 for (let g = 0; g < GAMES; g++) {
-  const gameSeed = BASE_SEED + g;
-  const winner = playGame(gameSeed);
+  const winner = playGame(BASE_SEED + g);
   if (winner === 0) p0Wins++;
   else p1Wins++;
 
+  const played = g + 1;
+
   if (!QUIET) {
-    const gamesPlayed = g + 1;
-    const p0Rate = p0Wins / gamesPlayed;
-    const p1Rate = p1Wins / gamesPlayed;
     const lead = p0Wins >= p1Wins ? "P0" : "P1";
     console.log(
-      `  [${String(gamesPlayed).padStart(String(GAMES).length)}/${GAMES}]` +
+      `  [${String(played).padStart(String(GAMES).length)}/${GAMES}]` +
       `  winner=P${winner}` +
-      `  running: P0 ${pct(p0Rate)} — P1 ${pct(p1Rate)}` +
+      `  running: P0 ${pct(p0Wins / played)} — P1 ${pct(p1Wins / played)}` +
       `  (${lead} leads)`
     );
   } else {
-    const bar = "█".repeat(Math.round(((g + 1) / GAMES) * 30)).padEnd(30, "░");
-    process.stdout.write(`\r  ${bar}  ${g + 1}/${GAMES} games`);
+    const bar = "█".repeat(Math.round((played / GAMES) * 30)).padEnd(30, "░");
+    process.stdout.write(`\r  ${bar}  ${played}/${GAMES} games`);
   }
 }
 
@@ -171,30 +201,28 @@ const [p1Lo, p1Hi] = wilsonCI(p1Wins, GAMES);
 
 console.log();
 console.log(rule);
-console.log(`Results after ${GAMES} games  (${elapsedMs}ms total)`);
+console.log(`Results after ${GAMES} games  (${elapsedMs}ms)`);
 console.log(thin);
-
-const col1 = 16;
 console.log(
-  `${"P0 " + BOT_BRAIN_LABELS[P0_BRAIN]}`.padEnd(col1 + 10) +
+  `P0  ${BOT_BRAIN_LABELS[P0_BRAIN].padEnd(22)}` +
   `wins: ${String(p0Wins).padStart(3)}  (${pct(p0Wins / GAMES)})` +
   `  CI95=[${pct(p0Lo)}, ${pct(p0Hi)}]`
 );
 console.log(
-  `${"P1 " + BOT_BRAIN_LABELS[P1_BRAIN]}`.padEnd(col1 + 10) +
+  `P1  ${BOT_BRAIN_LABELS[P1_BRAIN].padEnd(22)}` +
   `wins: ${String(p1Wins).padStart(3)}  (${pct(p1Wins / GAMES)})` +
   `  CI95=[${pct(p1Lo)}, ${pct(p1Hi)}]`
 );
-
 console.log(thin);
 
-// Significance note.
 const ciOverlap = p0Hi > p1Lo && p1Hi > p0Lo;
 if (ciOverlap) {
   console.log("CI95 bands overlap — cannot claim statistical significance.");
-  console.log(`Tip: run with --games ${GAMES * 5} for tighter intervals.`);
+  console.log(`Tip: rerun with --games ${GAMES * 5} for tighter intervals.`);
 } else {
-  const faster = p0Wins > p1Wins ? `P0 (${BOT_BRAIN_LABELS[P0_BRAIN]})` : `P1 (${BOT_BRAIN_LABELS[P1_BRAIN]})`;
-  console.log(`CI95 bands do NOT overlap — ${faster} wins significantly (p<0.05).`);
+  const winner = p0Wins > p1Wins
+    ? `P0 (${BOT_BRAIN_LABELS[P0_BRAIN]})`
+    : `P1 (${BOT_BRAIN_LABELS[P1_BRAIN]})`;
+  console.log(`CI95 bands do NOT overlap — ${winner} wins significantly (p<0.05).`);
 }
 console.log(rule);

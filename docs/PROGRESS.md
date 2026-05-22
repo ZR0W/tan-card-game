@@ -61,6 +61,9 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 - [x] **Story 4.3** — Bot Brain Toggle & Benchmark  
   Completed: 2026-05-22 | Notes: `BotBrain` type + `pickBotMove` in `src/ai/botBrain.ts`; brain-selector dropdown in UI; `npm run benchmark` CLI with per-game progress, Wilson CI95, significance note; `advanceSession` + `useGameSession` updated to accept `BotBrain | null`.
 
+- [x] **Story 4.4** — Random Brain & Diagnostic Ladder  
+  Completed: 2026-05-22 | Notes: `"random"` added to `BotBrain`; uses seeded Mulberry32 RNG for reproducibility; benchmark banner now shows explicit `--p0`/`--p1` flags and a `--sims` note when unused; diagnostic ladder documented in README.
+
 ---
 
 ## EPIC 5 — Performance Optimization
