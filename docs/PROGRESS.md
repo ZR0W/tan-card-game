@@ -52,11 +52,14 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 
 ## EPIC 4 — Monte Carlo AI
 
-- [ ] **Story 4.1** — Determinization  
-  Completed: _ | Notes: _
+- [x] **Story 4.1** — Determinization  
+  Completed: 2026-05-22 | Notes: `generateDeterminizedState` in `src/ai/determinization.ts`; pools opponent hand + deck, shuffles with seeded RNG, re-splits by original count; 11 Vitest tests (card conservation, reproducibility, perspective correctness, playability).
 
-- [ ] **Story 4.2** — Monte Carlo Move Evaluation  
-  Completed: _ | Notes: _
+- [x] **Story 4.2** — Monte Carlo Move Evaluation  
+  Completed: 2026-05-22 | Notes: `chooseMctsMove` in `src/ai/mcts.ts`; flat Monte Carlo (N sims/move); audit API: `auditLog`, `auditLogToTimeSeries`, `MctsGraph`, `graphToDot`, `formatMctsResult`, `onProgress`; `npm run mcts-demo`; 38 Vitest tests.
+
+- [x] **Story 4.3** — Bot Brain Toggle & Benchmark  
+  Completed: 2026-05-22 | Notes: `BotBrain` type + `pickBotMove` in `src/ai/botBrain.ts`; brain-selector dropdown in UI; `npm run benchmark` CLI with per-game progress, Wilson CI95, significance note; `advanceSession` + `useGameSession` updated to accept `BotBrain | null`.
 
 ---
 

@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "play": "tsx src/cli/play.ts",
-    "mcts-demo": "tsx src/cli/mcts-demo.ts"
+    "mcts-demo": "tsx src/cli/mcts-demo.ts",
+    "benchmark": "tsx src/cli/benchmark.ts"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
