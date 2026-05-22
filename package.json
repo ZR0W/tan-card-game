@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "play": "tsx src/cli/play.ts"
+    "play": "tsx src/cli/play.ts",
+    "mcts-demo": "tsx src/cli/mcts-demo.ts"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
