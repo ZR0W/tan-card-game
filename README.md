@@ -364,7 +364,7 @@ Moves are chosen by index from the printed legal list; in the draw phase you can
 
 **Goal:** Introduce probabilistic reasoning.
 
-**Worker timing:** To keep the UI responsive, run simulations in a Web Worker from the start of this epic (or as the first story). Either add a minimal "run simulations in worker" task here or complete Epic 5 (Performance) before raising simulation counts.
+**Worker timing:** To keep the UI responsive, run simulations in a Web Worker from the start of this epic (or as the first story). Either add a minimal "run simulations in worker" task here or complete Epic 6 (Performance) before raising simulation counts.
 
 #### Story 4.1 — Determinization
 
@@ -444,11 +444,215 @@ something is wrong with the greedy evaluation or the engine.
 
 ---
 
-### EPIC 5 — Performance Optimization
+### EPIC 5 — Brain Evaluation & Tuning
+
+**Goal:** Thoroughly evaluate every bot brain, expose weaknesses in the current
+heuristic and MCTS implementation, and define concrete improvements.
+
+This epic produces no new playable features — its deliverables are benchmark
+results, documented analyses, and a set of actionable findings that feed
+directly into Epic 6 (Performance) and future AI work.
+
+#### Story 5.1 — Greedy Heuristic Audit
+
+**Objective:** Clearly state what the greedy bot is actually doing, surface
+implicit assumptions, and identify evaluation gaps — especially around the
+defender role which received less design attention than the attacker role.
+
+**What the current heuristic does**
+
+`chooseGreedyMove` (`src/ai/heuristicBot.ts`) is a one-step lookahead: it
+enumerates every legal move, scores the resulting state with `evaluateState`,
+and returns the highest-scoring move. It never looks beyond the immediate next
+state.
+
+`evaluateState` (`src/ai/evaluation.ts`) combines five named metrics from
+`evaluateMetrics` (`src/ai/metrics.ts`) using a fixed weight table
+(`METRIC_WEIGHTS`):
+
+| Metric | Weight | Formula | Rationale |
+|--------|--------|---------|-----------|
+| `handEconomy` | 1.1 | `−nSelf + 0.35·(nOpp − nSelf)` | Prefer fewer cards; slight pull when opponent holds more |
+| `trumpEquity` | 0.85 | `ownTrumpValue − oppTrumpValue` | Prefer trump card advantage |
+| `rankStrength` | 1.0 | `(rankSumSelf − rankSumOpp) / 96` | Prefer higher overall rank mass |
+| `roundPressure` | 1.0 | Penalty if defending with unbeaten attacks; bonus if attacker with all attacks beaten | Only role-aware metric |
+| `phaseUtility` | 0.9 | Bonus when hand ≤ 3 cards or deck < 12 cards | Rewards endgame positioning |
+
+**Known gaps to audit**
+
+- `handEconomy` penalises having cards at all. But as attacker, holding more
+  high-rank cards is a weapon, not a liability. The metric does not distinguish
+  *which* cards are in hand, only how many.
+- `rankStrength` aggregates raw rank values without suit awareness. A hand of
+  seven low trumps scores worse than a hand of seven high non-trumps — but the
+  trump hand is almost certainly stronger.
+- `roundPressure` is the only metric that knows whether we are the attacker or
+  defender, but its signal is weak (at most ±2 points per undefended attack vs
+  the 10,000-point terminal bounds). It does not model the cost of giving up
+  (`give_up`) relative to spending a valuable trump to defend.
+- No metric captures *which specific card* should be played — only aggregate
+  hand quality. A greedy bot might play its highest trump to beat a 2 of
+  clubs because the resulting state scores slightly higher in `rankStrength`.
+- `phaseUtility` rewards low card counts unconditionally. Late-game a player
+  with 0 cards wins — but mid-game aggressively burning cards can leave you
+  defenceless.
+
+**Tasks**
+
+- Walk through a set of representative game positions (mid-game, late attacker,
+  late defender, near-empty deck) and record what move the greedy bot selects
+  and why (log `evaluateMetrics` output per candidate move)
+- For each position, assess whether the chosen move matches intuitive
+  expert play
+- Produce a written findings table: metric, gap observed, proposed fix direction
+- Identify whether any metric actively misdirects the bot (scores worse for the
+  objectively better move)
+
+**Deliverable:** Written audit report (findings table + representative positions)
+committed to `docs/HEURISTIC_AUDIT.md`. No code changes in this story —
+findings feed Story 5.3.
+
+---
+
+#### Story 5.2 — MCTS Simulation Threshold Study
+
+**Objective:** Find the minimum number of simulations per move at which MCTS
+surpasses the greedy bot with statistical significance — or determine that no
+such threshold exists within a practical budget.
+
+**Background**
+
+MCTS with very few simulations is effectively random: with 1 simulation per
+move, each move gets exactly one playout and the outcome is noise. As
+simulations increase, the win-rate estimates converge and signal should
+dominate noise. The threshold study finds where (if ever) the signal is strong
+enough to produce a measurably better move choice than greedy one-step
+lookahead.
+
+If MCTS never surpasses greedy regardless of simulation count, that is strong
+evidence of a structural implementation problem (wrong playout policy, wrong
+move evaluation, determinization bug) not just a tuning issue.
+
+**Methodology**
+
+Run the diagnostic ladder from Story 4.4 with increasing `--sims` values.
+Use `--games 100` throughout for adequate statistical power.
+
+```
+# Baseline: confirm greedy beats random (must pass before proceeding)
+npm run benchmark -- --p0 greedy --p1 random     --games 100
+
+# Threshold sweep: greedy (P0) vs MCTS (P1) at each sim count
+npm run benchmark -- --p0 greedy --p1 mcts --sims   1  --games 100
+npm run benchmark -- --p0 greedy --p1 mcts --sims   5  --games 100
+npm run benchmark -- --p0 greedy --p1 mcts --sims  10  --games 100
+npm run benchmark -- --p0 greedy --p1 mcts --sims  25  --games 100
+npm run benchmark -- --p0 greedy --p1 mcts --sims  50  --games 100
+npm run benchmark -- --p0 greedy --p1 mcts --sims 100  --games 100
+npm run benchmark -- --p0 greedy --p1 mcts --sims 200  --games 100
+```
+
+Record the P1 (MCTS) win rate and CI95 for each row. The threshold is the
+lowest `--sims` where the CI95 low bound exceeds 50% (i.e. the band does not
+include 50%).
+
+**Expected results table** (to be filled in when running the study):
+
+| `--sims` | MCTS win rate | CI95 | Significance |
+|----------|--------------|------|-------------|
+| 1 | _ | _ | _ |
+| 5 | _ | _ | _ |
+| 10 | _ | _ | _ |
+| 25 | _ | _ | _ |
+| 50 | _ | _ | _ |
+| 100 | _ | _ | _ |
+| 200 | _ | _ | _ |
+
+**Interpretation guide**
+
+- MCTS win rate < 50% at all counts → implementation is broken; revisit
+  playout policy, determinization correctness, and move index mapping
+- MCTS win rate > 50% only at high counts (≥ 100) → algorithm is correct but
+  the random playout baseline is weak; consider heuristic-guided playouts
+  (Epic 7 scope)
+- MCTS win rate > 50% at low counts (≤ 25) → algorithm is healthy; tune
+  `mcts-fast` default to that threshold and remove `mcts` as a separate variant
+
+**Deliverable:** Completed results table committed to `docs/MCTS_THRESHOLD.md`.
+No code changes in this story unless the study reveals an obvious implementation
+bug, in which case the fix is a separate PR referencing the findings doc.
+
+---
+
+#### Story 5.3 — Role-Differentiated Strategy Analysis
+
+**Objective:** Evaluate how each brain performs differently as attacker vs
+defender, with a focus on identifying gaps in the defence strategy — the role
+that received the least explicit design attention.
+
+**Why attacker and defender require different reasoning**
+
+In Tan, the two roles in each round have fundamentally different objectives
+and legal move sets:
+
+| Dimension | Attacker | Defender |
+|-----------|---------|---------|
+| Goal | Force opponent to pick up cards | Beat all attacks with minimum card cost |
+| Move options | Play any card (first attack); same-rank only (follow-on); or pass | Beat the current attack card; or give up |
+| Risk profile | Can control pace; choosing not to attack more costs nothing | Every undefended attack card goes into hand |
+| Trump usage | Ideally save trumps; attack with non-trump bait | Trumps are the last resort; spending one to defend a low attack is a loss |
+| Optimal fail state | Spend minimum cards to stay in initiative | Give up only when all defences cost more than the pickups |
+
+**Gaps in the current greedy heuristic (from Story 5.1 audit)**
+
+The greedy heuristic uses the same `evaluateState` for both roles. The only
+role-aware signal is `roundPressure`, which is weak. As a result:
+
+- The bot may over-spend trumps defending low-rank non-trump attacks (pays too
+  much to avoid giving up)
+- The bot may under-attack: `handEconomy` penalises playing cards, so the
+  attacker may pass too early to preserve hand size
+- `give_up` is never directly evaluated for *how much* is being picked up — the
+  bot treats picking up 1 card the same as picking up 5
+
+**Gaps in the current MCTS playout (from Story 5.2 observations)**
+
+MCTS uses `runFromState` for playouts, which picks moves uniformly at random.
+A random playout from the defender's position is an extremely weak signal:
+random defenders give up constantly (it is always a legal move) and random
+attackers play suboptimally. This means MCTS win-rate estimates from any
+defender position are very noisy and biased toward the attacker.
+
+**Tasks**
+
+- Extend the benchmark to record role-specific win rates: track separately
+  how often the bot wins when it started the game as attacker vs when it
+  started as defender
+- Analyse whether either brain shows a significant attacker/defender win-rate
+  asymmetry (expected: attacker advantage exists in random play; should be
+  reduced by good defence)
+- Draft a set of proposed defence-aware metric changes:
+  - `give_up` cost metric: weight the pickup by the number of round cards
+    (giving up 4 is much worse than giving up 1)
+  - Trump conservation metric: penalise spending a trump to defend a card
+    with rank below a threshold
+  - Defence efficiency: reward defending with the minimum-rank card that beats
+    the attack (do not over-spend)
+- Draft a proposal for role-aware MCTS playouts: weight `give_up` heavily in
+  random playouts so the playout policy is not randomly generous to the attacker
+
+**Deliverable:** Written analysis committed to `docs/ROLE_STRATEGY_ANALYSIS.md`,
+covering: observed attacker/defender win-rate asymmetry per brain, identified
+metric gaps, and specific proposed metric changes with before/after rationale.
+Proposed metric changes are implemented in a subsequent story (not this one).
+
+---
+
+### EPIC 6 — Performance Optimization
 
 **Goal:** Maintain responsive UI.
 
-#### Story 5.1 — Web Worker Integration
+#### Story 6.1 — Web Worker Integration
 
 **Tasks:**
 
@@ -456,7 +660,7 @@ something is wrong with the greedy evaluation or the engine.
 - Use message passing
 - Prevent main-thread blocking
 
-#### Story 5.2 — Performance Controls
+#### Story 6.2 — Performance Controls
 
 **Tasks:**
 
@@ -469,11 +673,11 @@ something is wrong with the greedy evaluation or the engine.
 
 ---
 
-### EPIC 6 — Strategy Discovery Mode (Advanced)
+### EPIC 7 — Strategy Discovery Mode (Advanced)
 
 **Goal:** Explore long-term optimal play.
 
-#### Story 6.1 — Self-Play Mode
+#### Story 7.1 — Self-Play Mode
 
 **Tasks:**
 
@@ -482,7 +686,7 @@ something is wrong with the greedy evaluation or the engine.
 - Run 1,000+ games automatically
 - Collect statistics
 
-#### Story 6.2 — Data Logging
+#### Story 7.2 — Data Logging
 
 **Tasks:**
 
@@ -491,7 +695,7 @@ something is wrong with the greedy evaluation or the engine.
 - Track game length
 - Export results as JSON
 
-#### Story 6.3 — Advanced AI (Optional Future)
+#### Story 7.3 — Advanced AI (Optional Future)
 
 Possible directions:
 

@@ -66,23 +66,36 @@ Full descriptions are in the [README](../README.md#4-development-roadmap-epics--
 
 ---
 
-## EPIC 5 — Performance Optimization
+## EPIC 5 — Brain Evaluation & Tuning
 
-- [ ] **Story 5.1** — Web Worker Integration  
+- [ ] **Story 5.1** — Greedy Heuristic Audit  
+  Completed: _ | Notes: Walk through representative positions, log `evaluateMetrics` output per candidate move, produce findings table in `docs/HEURISTIC_AUDIT.md`. No code changes — findings feed Story 5.3.
+
+- [ ] **Story 5.2** — MCTS Simulation Threshold Study  
+  Completed: _ | Notes: Run `greedy vs mcts` benchmark sweep at sims=1,5,10,25,50,100,200 with --games 100 each. Record win rate + CI95. Find minimum sims where CI95 low > 50%. Document in `docs/MCTS_THRESHOLD.md`.
+
+- [ ] **Story 5.3** — Role-Differentiated Strategy Analysis  
+  Completed: _ | Notes: Measure attacker/defender win-rate asymmetry per brain. Draft defence-aware metric proposals and role-aware MCTS playout weights. Document in `docs/ROLE_STRATEGY_ANALYSIS.md`.
+
+---
+
+## EPIC 6 — Performance Optimization
+
+- [ ] **Story 6.1** — Web Worker Integration  
   Completed: _ | Notes: _
 
-- [ ] **Story 5.2** — Performance Controls  
+- [ ] **Story 6.2** — Performance Controls  
   Completed: _ | Notes: _
 
 ---
 
-## EPIC 6 — Strategy Discovery Mode (Advanced)
+## EPIC 7 — Strategy Discovery Mode (Advanced)
 
-- [ ] **Story 6.1** — Self-Play Mode  
+- [ ] **Story 7.1** — Self-Play Mode  
   Completed: _ | Notes: _
 
-- [ ] **Story 6.2** — Data Logging  
+- [ ] **Story 7.2** — Data Logging  
   Completed: _ | Notes: _
 
-- [ ] **Story 6.3** — Advanced AI (Optional Future)  
+- [ ] **Story 7.3** — Advanced AI (Optional Future)  
   Completed: _ | Notes: _
